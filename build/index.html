@@ -1,0 +1,59 @@
+<html>
+<head>
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/0.3.16/peer.min.js"></script> -->
+	<!-- <script>
+		// TypeScript 2.2 requires 'exports' global variable.
+		var exports = {};
+	</script> -->
+	<script type="text/javascript" src="scripts\meshnetwork.js"></script>
+	<script type="text/javascript">
+		let networkNode = new Meshnetwork.Node();
+
+		networkNode.onMessageReceived = function (src, data) {
+			let log = document.getElementById("log");
+			log.value = log.value + src + " sent " + data + "\n";
+			log.scrollTop = log.scrollHeight;
+		};
+
+		function onConnectButtonClicked() {
+			let log = document.getElementById("log");
+			let otherPeerIDField = document.getElementById("otherPeerIDField");
+			networkNode.onUserJoin = user => {
+				otherPeerIDField.innerText = user;
+				this.otherPeerId = user;
+			};
+			networkNode.onUserDisconnect = user => {
+				log.value = log.value + user + " disconnected.\n";
+			};
+			networkNode.onConnectedToBroker = localNodeId => {
+				let localIdField = document.getElementById("localIdField");
+				localIdField.innerText = localNodeId;
+				this.localNodeId = localNodeId;
+			};
+			this.otherPeerId = document.getElementById("peerIdTextInput").value;
+			otherPeerIDField.innerText = this.otherPeerId;
+			networkNode.connect(this.otherPeerId);
+		}
+
+		function onSendButtonClicked() {
+			var message = document.getElementById("messageInput").value;
+			networkNode.sendData(message, this.otherPeerId);
+		}
+	</script>
+</head>
+<body>
+	<div>
+		<p>Local peer ID: <b id="localIdField"></b></p>
+		<p>Connected to peer: <b id="otherPeerIDField"></b></p>
+		<p>
+			Peer ID: <input type="text" id="peerIdTextInput">
+			<input type="submit" value="Connect" onclick="onConnectButtonClicked()">
+		</p>
+		<p>
+			Message: <input type="text" id="messageInput">
+			<input type="submit" value="Send" onclick="onSendButtonClicked()">
+		</p>
+		<p><textarea id="log" style="width: 500;height: 300;"></textarea></p>
+	</div>
+</body>
+</html>
