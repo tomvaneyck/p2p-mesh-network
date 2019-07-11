@@ -1,0 +1,10 @@
+import { Message } from '../src/interfaces';
+import { Subscription } from 'rxjs';
+
+
+export class Channel {
+    private outgoingData: sendMessageBuffer;
+    private incomingData: MessageBuffer;
+
+    
+}

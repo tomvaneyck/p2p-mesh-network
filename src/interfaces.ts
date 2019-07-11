@@ -1,7 +1,7 @@
 import { ReactiveQueue } from './Reactive/ReactiveQueue';
 
 export interface Message {
-    uid: MessageUid,
+    // uid?: MessageUid,
     header: MessageHeader,
     body?: any
 }
@@ -13,15 +13,17 @@ export interface MessageUid {
 
 export interface MessageHeader {
     type: MessageType,
-    targetPeer?: string,
+    sourceAddress: string,
+    destinationAddress?: string,
+    index?: number,
     ttl?: number
 }
 
 export enum MessageType {
     // network_state,
     // network_state_request,
-    msg,
-    msg_broadcast,
+    unicast,
+    broadcast,
     new_edge,
     // destroy_edge,
     // announcement,
