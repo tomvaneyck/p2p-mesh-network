@@ -1,8 +1,8 @@
 import { TransportEntity } from './transport';
 import { Subject } from 'rxjs';
-import { Message, MessageType } from './interfaces';
+import { Message, MessageType } from './message';
 import { NetworkEntity } from './network';
-import { NetworkEventType, NetworkEvent } from './event';
+import { MeshEventType, MeshEvent } from './event';
 
 export class Node {
     private address: string = this.generateUuidv4();
@@ -28,15 +28,26 @@ export class Node {
             this.onMessageReceived(message.header.sourceAddress, message.body);
         });
 
-        this.networkEntitity.events.subscribe((event: NetworkEvent) => {
+        this.transportEntity.events.subscribe((event: MeshEvent) => {
             switch (event.type) {
-                case NetworkEventType.connectedToNetwork:
+                case MeshEventType.outOfBufferBounds:
+                    console.log("Metadata of incoming error:", event.metadata);
+                    throw Error(event.message);
+                case MeshEventType.malformedMessage:
+                    console.log("Metadata of incoming error:", event.metadata);
+                    throw Error(event.message);
+            }
+        });
+
+        this.networkEntitity.events.subscribe((event: MeshEvent) => {
+            switch (event.type) {
+                case MeshEventType.connectedToNetwork:
                     this.onConnectedToNetwork(<string> event.metadata);
                     break;
-                case NetworkEventType.connectedToPeer:
+                case MeshEventType.connectedToPeer:
                     this.onConnectedToPeer(<string> event.metadata);
                     break;
-                case NetworkEventType.connectionClosed:
+                case MeshEventType.connectionClosed:
                     this.onDisconnectedFromNetwork()
                     break;
             }
@@ -47,16 +58,32 @@ export class Node {
         this.networkEntitity.connectToPeer(address);
     }
     
-    public sendData(data: any): void {
-        let message: Message = {
-            header: {
-                type: MessageType.broadcast,
-                sourceAddress: this.address
-            },
-            body: data
+    public sendData(data: any): void;
+    public sendData(data: any, destinationAddress: string): void;
+    public sendData(data: any, destinationAddress?: string): void {
+        let message: Message;
+        if (!destinationAddress) {
+            message = {
+                header: {
+                    type: MessageType.broadcast,
+                    sourceAddress: this.address
+                },
+                body: data
+            }
+        } else {
+            message = {
+                header: {
+                    type: MessageType.unicast,
+                    sourceAddress: this.address,
+                    destinationAddress: destinationAddress
+                },
+                body: data
+            }
         }
+        
         this.transportEntity.sendMessage(message);
     }
+
 
     /**
      * Generates a global unique identifier.

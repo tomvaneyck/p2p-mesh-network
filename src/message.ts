@@ -6,10 +6,17 @@ export interface Message {
     body?: any
 }
 
-export interface MessageUid {
-    sourceNodeUuid: string,
-    index: number
+export interface Acknowledgement extends Message {
+    header: AcknowledgementHeader,
+    body: {
+        index: number
+    }
 }
+
+// export interface MessageUid {
+//     sourceNodeUuid: string,
+//     index: number
+// }
 
 export interface MessageHeader {
     type: MessageType,
@@ -17,6 +24,12 @@ export interface MessageHeader {
     destinationAddress?: string,
     index?: number,
     ttl?: number
+}
+
+export interface AcknowledgementHeader {
+    type: MessageType.acknowledgement,
+    sourceAddress: string,
+    destinationAddress: string,
 }
 
 export enum MessageType {
@@ -27,7 +40,7 @@ export enum MessageType {
     new_edge,
     // destroy_edge,
     // announcement,
-    ack
+    acknowledgement
 }
 
 export interface MessageQueue {

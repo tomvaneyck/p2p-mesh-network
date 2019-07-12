@@ -1,11 +1,14 @@
-export interface NetworkEvent {
+export interface MeshEvent {
     readonly message: string;
-    readonly type: NetworkEventType;
-    readonly metadata?: string;
+    readonly type: MeshEventType;
+    readonly metadata?: any;
+    // TODO: Add error for stack trace purposes.
 }
 
-export enum NetworkEventType {
+export enum MeshEventType {
     connectedToNetwork,
     connectionClosed,
-    connectedToPeer
+    connectedToPeer,
+    outOfBufferBounds,
+    malformedMessage
 }

@@ -1,7 +1,7 @@
-import { Message } from './interfaces';
+import { Message } from './message';
 import Peer, { DataConnection } from "peerjs";
 import { Subject, ReplaySubject } from 'rxjs';
-import { NetworkEvent, NetworkEventType } from './event';
+import { MeshEvent, MeshEventType } from './event';
 
 export class NetworkEntity {
     private address: string;
@@ -10,7 +10,7 @@ export class NetworkEntity {
     
     private networkConnection: Peer;
     // public isConnected: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-    public events: ReplaySubject<NetworkEvent> = new ReplaySubject<NetworkEvent>();
+    public events: ReplaySubject<MeshEvent> = new ReplaySubject<MeshEvent>();
     private connections: { [address: string]: DataConnection} = {};
 
     constructor(address: string) {
@@ -32,7 +32,7 @@ export class NetworkEntity {
         this.networkConnection.on('open', address => {
             this.events.next({
                 message: "A connection to the server has been established.",
-                type: NetworkEventType.connectedToNetwork,
+                type: MeshEventType.connectedToNetwork,
                 metadata: address
             });
         });
@@ -48,7 +48,7 @@ export class NetworkEntity {
         this.networkConnection.on('close', () => {
             this.events.next({
                 message: "The connection to the network has been closed.",
-                type: NetworkEventType.connectionClosed
+                type: MeshEventType.connectionClosed
             });
         })
     }
@@ -72,7 +72,7 @@ export class NetworkEntity {
 
         this.events.next({
             message: "A connection to another peer has been made.",
-            type: NetworkEventType.connectedToPeer,
+            type: MeshEventType.connectedToPeer,
             metadata: connection.peer
         });
 
