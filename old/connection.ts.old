@@ -1,4 +1,4 @@
-import { Message, MessageType, MessageUid } from './interfaces';
+import { Message, MessageType, MessageUid } from '../src/interfaces';
 import { DataConnection } from "peerjs";
 import { interval, Subscription, Subject } from 'rxjs';
 

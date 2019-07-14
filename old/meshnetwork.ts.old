@@ -1,7 +1,7 @@
-import { Message, MessageQueue, MessageType } from './interfaces';
+import { Message, MessageQueue, MessageType } from '../src/interfaces';
 import { Connection } from './connection';
 
-import { ReactiveQueue } from './Reactive/ReactiveQueue';
+import { ReactiveQueue } from '../src/Reactive/ReactiveQueue';
 
 import Peer, { DataConnection } from "peerjs";
 
@@ -223,7 +223,7 @@ export class Node {
                 
                 break;
             case MessageType.new_edge:
-                if (message.header.targetPeer != undefined) {
+                if (message.header.destinationAddress != undefined) {
                     // this.graph.addConnection(message.sourcePeer, message.targetPeer)
                     // this.forwardMessageToLocalPeers(message, srcNode);
                 }
@@ -254,7 +254,7 @@ export class Node {
             case MessageType.msg:
                 // TODO: multicast works like broadcast right now.
                 // this.forwardMessageToLocalPeers(message, srcNode);
-                if (message.header.targetPeer == this.uuid) {
+                if (message.header.destinationAddress == this.uuid) {
                     this.onMessageReceived(message.uid.sourceNodeUuid, message.body);
                 }
                 break;

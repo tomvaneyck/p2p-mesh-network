@@ -5,7 +5,8 @@
 		// TypeScript 2.2 requires 'exports' global variable.
 		var exports = {};
 	</script> -->
-	<script type="text/javascript" src="scripts\meshnetwork.js"></script>
+	<script type="text/javascript" src="scripts\node.js"></script>
+	<script type="text/javascript" src="scripts\node.js"></script>
 	<script type="text/javascript">
 		let networkNode = new Meshnetwork.Node();
 
@@ -15,39 +16,56 @@
 			log.scrollTop = log.scrollHeight;
 		};
 
+		networkNode.onConnectedToPeer = function(user) {
+			let otherAddress = document.getElementById("otherAddress");
+			otherAddress.innerText = user;
+			console.log("A connection was made to peer", user);
+		};
+		networkNode.onDisconnectedFromNetwork = function() {
+			document.getElementById("localAddress").innerText = "";
+			document.getElementById("otherAddress").innerText = "";
+			console.log("Disconnected from network.");
+		};
+		networkNode.onConnectedToNetwork = function(localNodeId) {
+			let localAddress = document.getElementById("localAddress");
+			localAddress.innerText = localNodeId;
+			console.log("Connected to network with id:", localNodeId);
+		};
+
 		function onConnectButtonClicked() {
-			let log = document.getElementById("log");
-			let otherPeerIDField = document.getElementById("otherPeerIDField");
-			networkNode.onUserJoin = user => {
-				otherPeerIDField.innerText = user;
-				this.otherPeerId = user;
-			};
-			networkNode.onUserDisconnect = user => {
-				log.value = log.value + user + " disconnected.\n";
-			};
-			networkNode.onConnectedToBroker = localNodeId => {
-				let localIdField = document.getElementById("localIdField");
-				localIdField.innerText = localNodeId;
-				this.localNodeId = localNodeId;
-			};
-			this.otherPeerId = document.getElementById("peerIdTextInput").value;
-			otherPeerIDField.innerText = this.otherPeerId;
-			networkNode.connect(this.otherPeerId);
+			let address = document.getElementById("peerIdTextInput").value;
+			networkNode.connectToPeer(address);
+		}
+		function onSendButtonClicked() {
+			let message = document.getElementById("messageInput").value;
+			let sendToAddress = document.getElementById("sendToAddress").value;
+			networkNode.sendData(message, sendToAddress);
 		}
 
-		function onSendButtonClicked() {
-			var message = document.getElementById("messageInput").value;
-			networkNode.sendData(message, this.otherPeerId);
+		function copyLocalAddress() {
+			var copyText = document.getElementById("localAddress");
+			var textArea = document.createElement("textarea");
+			textArea.value = copyText.innerText;
+			document.body.appendChild(textArea);
+			textArea.select();
+			document.execCommand("Copy");
+			textArea.remove();
 		}
 	</script>
 </head>
 <body>
 	<div>
-		<p>Local peer ID: <b id="localIdField"></b></p>
-		<p>Connected to peer: <b id="otherPeerIDField"></b></p>
+		<p>
+			Local peer ID: <b id="localAddress"></b>
+			<button onclick="copyLocalAddress()">Copy address</button>
+		</p>
+		<p>Connected to peer: <b id="otherAddress"></b></p>
 		<p>
 			Peer ID: <input type="text" id="peerIdTextInput">
 			<input type="submit" value="Connect" onclick="onConnectButtonClicked()">
+		</p>
+		<p>
+			Send to peer: <input type="text" id="sendToAddress">
 		</p>
 		<p>
 			Message: <input type="text" id="messageInput">

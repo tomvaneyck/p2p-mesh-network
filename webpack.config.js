@@ -1,11 +1,11 @@
 const path = require('path');
 
 module.exports = {
-  entry: "./src/meshnetwork.ts",
+  entry: "./src/node.ts",
   devtool: 'inline-source-map',
   output: {
     path: path.resolve(__dirname, "build/scripts"),
-    filename: "meshnetwork.js",
+    filename: "node.js",
     libraryTarget: "var",
     library: "Meshnetwork"
   },
