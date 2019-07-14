@@ -1,15 +1,15 @@
 {
   "name": "mesh-networking",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "description": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Wouterdek/distrirender.git"
+    "url": "https://github.com/tomvaneyck/p2p-mesh-network.git"
   },
   "bugs": {
-    "url": "https://github.com/Wouterdek/distrirender/issues"
+    "url": "https://github.com/tomvaneyck/p2p-mesh-network/issues"
   },
-  "homepage": "https://github.com/Wouterdek/distrirender/networking",
+  "homepage": "https://github.com/tomvaneyck/p2p-mesh-network/",
   "dependencies": {
     "eventemitter3": "^3.1.2",
     "express": "^4.16.4",
