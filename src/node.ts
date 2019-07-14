@@ -1,8 +1,9 @@
 import { TransportEntity } from './transport';
 import { Subject } from 'rxjs';
 import { Message, MessageType } from './message';
-import { NetworkEntity } from './network';
+import { NetworkEntity } from './network/network';
 import { MeshEventType, MeshEvent } from './event';
+import { ConnectionGraph } from './network/connectionGraph';
 
 export class Node {
     private address: string = this.generateUuidv4();
@@ -36,6 +37,10 @@ export class Node {
                 case MeshEventType.malformedMessage:
                     console.log("Metadata of incoming error:", event.metadata);
                     throw Error(event.message);
+                case MeshEventType.timeOut:
+                    console.log("Metadata of incoming error:", event.metadata);
+                    throw Error(event.message);
+                    
             }
         });
 

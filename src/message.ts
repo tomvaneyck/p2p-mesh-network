@@ -7,8 +7,31 @@ export interface Message {
 }
 
 export interface Acknowledgement extends Message {
-    header: AcknowledgementHeader,
+    header: {
+        type: MessageType.acknowledgement,
+        sourceAddress: string,
+        destinationAddress: string
+    },
     body: {
+        index: number
+    }
+}
+
+export interface NetworkStateMessage extends Message {
+    header: {
+        type: MessageType.networkState,
+        sourceAddress: string,
+        index: number
+    }
+    body: {
+        neighbours: string[]
+    }
+}
+
+export interface NetworkStateRequest extends Message {
+    header: {
+        type: MessageType.networkStateRequest,
+        sourceAddress: string,
         index: number
     }
 }
@@ -26,18 +49,14 @@ export interface MessageHeader {
     ttl?: number
 }
 
-export interface AcknowledgementHeader {
-    type: MessageType.acknowledgement,
-    sourceAddress: string,
-    destinationAddress: string,
-}
-
 export enum MessageType {
-    // network_state,
-    // network_state_request,
+    networkState,
+    networkStateRequest,
     unicast,
     broadcast,
-    new_edge,
+    connectNode,
+    disconnectNode,
+    // new_edge,
     // destroy_edge,
     // announcement,
     acknowledgement

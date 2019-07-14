@@ -1,4 +1,4 @@
-import { NetworkEntity } from './network';
+import { NetworkEntity } from './network/network';
 import { Subject, Subscription, interval, ReplaySubject } from 'rxjs';
 import { Message, MessageType, Acknowledgement } from './message';
 import { MeshEvent, MeshEventType } from './event';
@@ -10,9 +10,9 @@ export class TransportEntity {
     
     public events: ReplaySubject<MeshEvent> = new ReplaySubject<MeshEvent>();
     
-    private _globalMessageIndex: number = 0;
-    private get globalMessageIndex() {
-        return this._globalMessageIndex++;
+    private _broadcastMessageIndex: number = 0;
+    private get broadcastMessageIndex() {
+        return this._broadcastMessageIndex++;
     }
     private messageBuffers: { [address: string]: MessageBuffers } = {};
     
@@ -30,7 +30,7 @@ export class TransportEntity {
     public sendMessage(message: Message) {
         switch(message.header.type) {
             case MessageType.broadcast:
-                message.header.index = this.globalMessageIndex;
+                message.header.index = this.broadcastMessageIndex;
                 this.networkEntity.sendMessage(message);
                 break;
             case MessageType.unicast:
@@ -72,7 +72,20 @@ export class TransportEntity {
             this.networkEntity.sendMessage(sendBuffer.buffer[bufferIndex]);
             // Set timer for resending message if ack was not received.
             sendBuffer.timers[messageIndex] = interval(10000).subscribe(_ => {
-                this.networkEntity.sendMessage(sendBuffer.buffer[bufferIndex]);
+                let counter: number = 10;
+                if (counter > 0) {
+                    this.networkEntity.sendMessage(sendBuffer.buffer[bufferIndex]);
+                    counter--;
+                } else {
+                    sendBuffer.timers[messageIndex].unsubscribe();
+                    delete sendBuffer.timers[messageIndex];
+                    sendBuffer.ackReceived[messageIndex] = true;
+                    this.events.next({
+                        type: MeshEventType.timeOut,
+                        message: "The message timed out",
+                        metadata: sendBuffer.buffer[messageIndex]
+                    });
+                }
             });
         } else {
             this.events.next({

@@ -6,6 +6,7 @@
 		var exports = {};
 	</script> -->
 	<script type="text/javascript" src="scripts\node.js"></script>
+	<script type="text/javascript" src="scripts\node.js"></script>
 	<script type="text/javascript">
 		let networkNode = new Meshnetwork.Node();
 
@@ -37,8 +38,8 @@
 		}
 		function onSendButtonClicked() {
 			let message = document.getElementById("messageInput").value;
-			let otherAddress = document.getElementById("otherAddress").innerText;
-			networkNode.sendData(message, otherAddress);
+			let sendToAddress = document.getElementById("sendToAddress").value;
+			networkNode.sendData(message, sendToAddress);
 		}
 
 		function copyLocalAddress() {
@@ -62,6 +63,9 @@
 		<p>
 			Peer ID: <input type="text" id="peerIdTextInput">
 			<input type="submit" value="Connect" onclick="onConnectButtonClicked()">
+		</p>
+		<p>
+			Send to peer: <input type="text" id="sendToAddress">
 		</p>
 		<p>
 			Message: <input type="text" id="messageInput">

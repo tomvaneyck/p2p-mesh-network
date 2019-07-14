@@ -37,6 +37,6 @@
     "build": "webpack --config webpack.config.js",
     "build-and-start": "webpack --config webpack.config.js && peerjs --port 9000 --key peerjs"
   },
-  "author": "Wouter De Keersmaecker & Tom Van Eyck",
+  "author": "Tom Van Eyck & Wouter De Keersmaecker",
   "license": "MIT"
 }

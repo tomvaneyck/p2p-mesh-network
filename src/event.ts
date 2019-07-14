@@ -10,5 +10,6 @@ export enum MeshEventType {
     connectionClosed,
     connectedToPeer,
     outOfBufferBounds,
-    malformedMessage
+    malformedMessage,
+    timeOut
 }
