@@ -125,8 +125,7 @@ export class NetworkEntity {
             header: {
                 type: MessageType.networkState,
                 sourceAddress: this.address,
-                index: this.networkStateIndex,
-                ttl: 0
+                index: this.networkStateIndex
             },
             body: {
                 neighbours: Object.keys(this.connections)

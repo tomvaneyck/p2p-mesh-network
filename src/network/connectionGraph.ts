@@ -93,19 +93,6 @@ export class ConnectionGraph {
 
         return routingTable;
     }
-
-    // public test(): void {
-    //     this.connections.set("a", new Set(["b", "c", "g"]));
-    //     this.connections.set("b", new Set(["a", "c", "e"]));
-    //     this.connections.set("c", new Set(["b", "a", "d"]));
-    //     this.connections.set("d", new Set(["e", "c"]));
-    //     this.connections.set("e", new Set(["b", "d", "f"]));
-    //     this.connections.set("f", new Set(["e", "g"]));
-    //     this.connections.set("g", new Set(["f", "a"]));
-
-    //     console.log(this.constructRoutingTree());
-    //     console.log(this.makeRoutingTable());
-    // }
 }
 
 interface RoutingTreeNode {

@@ -3,7 +3,6 @@ import { Subject } from 'rxjs';
 import { Message, MessageType } from './message';
 import { NetworkEntity } from './network/network';
 import { MeshEventType, MeshEvent } from './event';
-import { ConnectionGraph } from './network/connectionGraph';
 
 export class Node {
     private address: string = this.generateUuidv4();
