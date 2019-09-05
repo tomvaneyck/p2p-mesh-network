@@ -1,4 +1,4 @@
-import { Message, MessageType, NetworkStateMessage, NetworkStateRequest } from '../message';
+import { Message, MessageType, ConnectionAccepted, ConnectionRejected, EntryPoint, EntryPointRequest, NetworkState, NetworkStateRequest, MessageWithIndex } from '../message';
 import Peer, { DataConnection } from "peerjs";
 import { Subject, ReplaySubject } from 'rxjs';
 import { MeshEvent, MeshEventType } from '../event';
@@ -12,13 +12,31 @@ export class NetworkEntity {
     private networkConnection: Peer;
     public events: ReplaySubject<MeshEvent> = new ReplaySubject<MeshEvent>();
 
-    private connections: { [address: string]: DataConnection } = {};
-    private connectionGraph: ConnectionGraph;
-    private _networkStateIndex: number = 0;
-    private get networkStateIndex() {
-        return this._networkStateIndex++;
+    private messageIndex: number = 0;
+    private get messsageIndex() {
+        return this.messageIndex++;
     }
-    private networkStateBuffer: { [address: string]: number } = {};
+    private messageIndexBuffer: { [address: string]: number } = {};
+
+    private minimumNumberhOfConnections: number = 5;
+    private maximumNumberOfConnections: number = 10;
+    // Boolean is temporary check.
+    private connections: { [address: string]: Connection } = {};
+    private get numberOfConnections(): number {
+        return Object.keys(this.connections).length;
+    }
+    private get temporaryConnections(): string[] {
+        let temporaryConnections: string[] = [];
+
+        for (let connection of Object.keys(this.connections)) {
+            if (this.connections[connection].temporary) {
+                temporaryConnections.push(connection);
+            }
+        }
+
+        return temporaryConnections;
+    }
+    private connectionGraph: ConnectionGraph;
     private routingTable: RoutingTable = {};
 
     constructor(address: string) {
@@ -58,20 +76,28 @@ export class NetworkEntity {
             });
         });
 
+        this.networkConnection.on('disconnected', () => {
+            this.events.next({
+                message: "The node was unexpectedly disconnected from the signalling server. Reconnection is being attempted.",
+                type: MeshEventType.disconnectedFromNetwork
+            });
+            this.networkConnection.reconnect();
+        });
+
         this.networkConnection.on('error', e => {
             throw Error(e);
         });
 
         this.networkConnection.on('connection', connection => {
             connection.on("open", () => {
-                this.handleNewConnection(connection);
+                this.handleNewConnection(connection, true);
             });
         });
 
         this.networkConnection.on('close', () => {
             this.events.next({
                 message: "The connection to the network has been closed.",
-                type: MeshEventType.connectionClosed
+                type: MeshEventType.disconnectedFromNetwork
             });
         })
     }
@@ -79,7 +105,7 @@ export class NetworkEntity {
     public connectToPeer(address: string) {
         let connection: DataConnection = this.networkConnection.connect(address, { reliable: true });
         connection.on('open', () => {
-            this.handleNewConnection(connection);
+            this.handleNewConnection(connection, false);
         });
     }
 
@@ -90,9 +116,8 @@ export class NetworkEntity {
      * right callbacks.
      * @param connection The new connection.
      */
-    private handleNewConnection(connection: DataConnection) {
-        this.connections[connection.peer] = connection;
-
+    private handleNewConnection(connection: DataConnection, incoming: boolean): void {
+        // Set up connection for data transmission.
         this.events.next({
             message: "A connection to another peer has been made.",
             type: MeshEventType.connectedToPeer,
@@ -103,12 +128,56 @@ export class NetworkEntity {
             this.handleIncomingMessage(message);
         });
 
+        connection.on("close", () => {
+            this.events.next({
+                message: "A connection to another peer has been lost.",
+                type: MeshEventType.disconnectedFromPeer,
+                metadata: connection.peer
+            });
+            this.sendNewNetworkState();
+        })
+        
         connection.on('error', (error: any) => {
-            this.connections[connection.peer];
+            this.events.next({
+                message: "A connection to another peer has been lost.",
+                type: MeshEventType.disconnectedFromPeer,
+                metadata: connection.peer
+            });
             this.sendNewNetworkState();
             throw Error(error);
         });
 
+        this.connections[connection.peer] = { dataConnection: connection, temporary: true };
+
+        if (incoming) {
+            // Checking if connection is allowed.
+            if (this.numberOfConnections < this.maximumNumberOfConnections) {
+                let connectionAccepted: ConnectionAccepted = {
+                    header: {
+                        type: MessageType.connectionAccepted,
+                        sourceAddress: this.address,
+                        destinationAdrress: connection.peer
+                    }
+                };
+                this.sendMessage(connectionAccepted)
+                
+                this.handleAcceptedConnection(connection);
+            }
+            else {
+                // Ask for available entry point. When entry point received, handled by handleNewMessage.
+                let entryPointRequest: EntryPointRequest = {
+                    header: {
+                        type: MessageType.entryPointRequest,
+                        sourceAddress: this.address,
+                        index: this.messageIndex
+                    }
+                };
+                this.sendMessage(entryPointRequest);
+            }
+        }
+    }
+
+    private handleAcceptedConnection(connection: DataConnection) {
         this.connectionGraph.addConnection(this.address, connection.peer);
 
         this.sendNewNetworkState();
@@ -121,11 +190,11 @@ export class NetworkEntity {
     }
 
     private sendNewNetworkState() {
-        let networkState: NetworkStateMessage = {
+        let networkState: NetworkState = {
             header: {
                 type: MessageType.networkState,
                 sourceAddress: this.address,
-                index: this.networkStateIndex
+                index: this.messsageIndex
             },
             body: {
                 neighbours: Object.keys(this.connections)
@@ -141,7 +210,7 @@ export class NetworkEntity {
             header: {
                 type: MessageType.networkStateRequest,
                 sourceAddress: this.address,
-                index: this.networkStateIndex
+                index: this.messsageIndex
             }
         };
 
@@ -153,51 +222,129 @@ export class NetworkEntity {
             case MessageType.unicast:
             case MessageType.acknowledgement:
                 let nextHop: string = this.routingTable[message.header.destinationAddress!];
-                this.connections[nextHop].send(message);
+                this.connections[nextHop].dataConnection.send(message);
                 break;
             case MessageType.broadcast:
             case MessageType.networkState:
             case MessageType.networkStateRequest:
             default:
                 for (let address in this.connections) {
-                    this.connections[address].send(message);
+                    this.connections[address].dataConnection.send(message);
                 }
         }
     }
 
     private handleIncomingMessage(message: Message): void {
         switch (message.header.type) {
-            case MessageType.networkState:
-                let networkState: NetworkStateMessage = <NetworkStateMessage> message;
+            case MessageType.connectionAccepted:
+                let connectionAccepted = message as ConnectionAccepted;
 
-                if (networkState.header.index > this.networkStateBuffer[networkState.header.sourceAddress]
-                    || this.networkStateBuffer[networkState.header.sourceAddress] === undefined) {
-                    this.connectionGraph.setNodeNeighbours(networkState.header.sourceAddress, networkState.body.neighbours);
-                    this.routingTable = this.connectionGraph.makeRoutingTable();
+                this.handleAcceptedConnection(this.connections[connectionAccepted.header.sourceAddress].dataConnection);
+                break;
+            case MessageType.connectionRejected:
+                let connectionRejected = message as ConnectionRejected;
+                
+                this.connections[connectionRejected.header.sourceAddress];
+                delete this.connections[connectionRejected.header.sourceAddress];
+                
+                this.events.next({
+                    type: MeshEventType.connectionToPeerRejected,
+                    message: "The peer that was tried does not have any more connection slots open."
+                })
+                break;
+            case MessageType.entryPoint:
+                this.forwardOrDoAction(message, (message: Message) => {
+                    let entryPoint = message as EntryPoint;
 
-                    this.networkStateBuffer[networkState.header.sourceAddress] = networkState.header.index;
-                    this.sendMessage(networkState);
+                    this.temporaryConnections.forEach((address) => {
+                        let connectionRejected: ConnectionRejected = {
+                            header: {
+                                type: MessageType.connectionRejected,
+                                sourceAddress: this.address,
+                                destinationAdrress: address
+                            },
+                            body: {
+                                newEntryPoint: entryPoint.body.EntryPointAddress
+                            }
+                        };
+
+                        this.sendMessage(connectionRejected);
+                    });
+                })
+                break;
+            case MessageType.entryPointRequest:
+                let entryPointRequest = message as EntryPointRequest;
+                if (this.numberOfConnections < this.maximumNumberOfConnections) {
+                    let entryPoint: EntryPoint = {
+                        header: {
+                            type: MessageType.entryPoint,
+                            sourceAddress: this.address,
+                            destinationAddress: entryPointRequest.header.sourceAddress
+                        },
+                        body: {
+                            EntryPointAddress: this.address
+                        }
+                    }
+
+                    this.sendMessage(entryPoint);
+                }
+                else {
+                    this.forwardAndDoActionIfNew(entryPointRequest, () => {});
                 }
                 break;
+            case MessageType.networkState:
+                let networkState = message as NetworkState;
+
+                this.forwardAndDoActionIfNew(networkState, (networkState: MessageWithIndex) => {
+                    this.connectionGraph.setNodeNeighbours(networkState.header.sourceAddress, networkState.body.neighbours);
+                    this.routingTable = this.connectionGraph.makeRoutingTable();
+                });
+                break;
             case MessageType.networkStateRequest:
-                let networkStateRequest: NetworkStateRequest = <NetworkStateRequest> message;
+                let networkStateRequest = message as NetworkStateRequest;
                 
-                if (networkStateRequest.header.index > this.networkStateBuffer[networkStateRequest.header.sourceAddress]
-                    || this.networkStateBuffer[networkStateRequest.header.sourceAddress] === undefined) {
+                this.forwardAndDoActionIfNew(networkStateRequest, () => {
                     this.sendNewNetworkState();
-                    this.networkStateBuffer[networkStateRequest.header.sourceAddress] = networkStateRequest.header.index;
-                    this.sendMessage(networkStateRequest);
-                }
+                });
                 break;
             case MessageType.broadcast:
                 this.incomingMessages.next(message);
                 break;
             default:
-                if (message.header.destinationAddress == this.address) {
+                this.forwardOrDoAction(message, (message: Message) => {
                     this.incomingMessages.next(message);
-                } else {
-                    this.sendMessage(message);
-                }
+                });
         }
     }
+
+    // Checks if the message is destined for this node and take appropriate action.
+    private forwardOrDoAction(message: Message, callback: (message: Message) => any): void {
+        if (message.header.destinationAddress === this.address) {
+            callback(message);
+        } else {
+            this.sendMessage(message);
+        }
+    }
+
+    private forwardAndDoActionIfNew(message: MessageWithIndex, callback: (message: MessageWithIndex) => any): void {
+        let bufferedIndex: number = this.messageIndexBuffer[message.header.sourceAddress];
+        let index: number = message.header.index;
+
+        if (index > bufferedIndex || bufferedIndex === undefined) {
+            callback(message);
+            bufferedIndex = index;
+            this.sendMessage(message);
+        }
+    }
+
+    // private balanceConnections(): void {
+    //     if (this.numberOfConnections < this.connectionGraph.numberOfNodes) {
+    //         this.
+    //     }
+    // }
+}
+
+interface Connection {
+    dataConnection: DataConnection,
+    temporary: boolean
 }

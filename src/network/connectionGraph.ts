@@ -8,6 +8,10 @@ export class ConnectionGraph {
         this.addNode(address);
     }
 
+    // public get numberOfNodes(): number {
+    //     return this.connections.size;
+    // }
+
     public addNode(address: string) {
         if (!  this.connections.has(address)) {
             this.connections.set(address, new Set());

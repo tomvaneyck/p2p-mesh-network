@@ -1,9 +1,60 @@
 import { ReactiveQueue } from './Reactive/ReactiveQueue';
 
-export interface Message {
-    // uid?: MessageUid,
-    header: MessageHeader,
-    body?: any
+export interface ConnectionAccepted extends Message {
+    header: {
+        type: MessageType.connectionAccepted,
+        sourceAddress: string,
+        destinationAdrress: string
+    }
+}
+
+export interface ConnectionRejected extends Message {
+    header: {
+        type: MessageType.connectionRejected,
+        sourceAddress: string,
+        destinationAdrress: string
+    },
+    body: {
+        newEntryPoint: string
+    }
+}
+
+export interface EntryPoint extends Message {
+    header: {
+        type: MessageType.entryPoint,
+        sourceAddress: string,
+        destinationAddress: string,
+    },
+    body: {
+        EntryPointAddress: string
+    }
+}
+
+export interface EntryPointRequest extends MessageWithIndex {
+    header: {
+        type: MessageType.entryPointRequest,
+        sourceAddress: string,
+        index: number
+    }
+}
+
+export interface NetworkState extends MessageWithIndex {
+    header: {
+        type: MessageType.networkState,
+        sourceAddress: string,
+        index: number
+    }
+    body: {
+        neighbours: string[]
+    }
+}
+
+export interface NetworkStateRequest extends MessageWithIndex {
+    header: {
+        type: MessageType.networkStateRequest,
+        sourceAddress: string,
+        index: number
+    }
 }
 
 export interface Acknowledgement extends Message {
@@ -17,49 +68,37 @@ export interface Acknowledgement extends Message {
     }
 }
 
-export interface NetworkStateMessage extends Message {
-    header: {
-        type: MessageType.networkState,
-        sourceAddress: string,
-        index: number
-    }
-    body: {
-        neighbours: string[]
-    }
+export enum MessageType {
+    connectionAccepted,
+    connectionRejected,
+    entryPointRequest,
+    entryPoint,
+    networkState,
+    networkStateRequest,
+    unicast,
+    broadcast,
+    acknowledgement
 }
 
-export interface NetworkStateRequest extends Message {
-    header: {
-        type: MessageType.networkStateRequest,
-        sourceAddress: string,
-        index: number
-    }
+export interface Message {
+    // uid?: MessageUid,
+    header: MessageHeader,
+    body?: any
 }
-
-// export interface MessageUid {
-//     sourceNodeUuid: string,
-//     index: number
-// }
 
 export interface MessageHeader {
     type: MessageType,
     sourceAddress: string,
     destinationAddress?: string,
-    index?: number,
     ttl?: number
 }
 
-export enum MessageType {
-    networkState,
-    networkStateRequest,
-    unicast,
-    broadcast,
-    connectNode,
-    disconnectNode,
-    // new_edge,
-    // destroy_edge,
-    // announcement,
-    acknowledgement
+export interface MessageWithIndex extends Message {
+    header: {
+        type: MessageType,
+        sourceAddress: string,
+        index: number
+    }
 }
 
 export interface MessageQueue {

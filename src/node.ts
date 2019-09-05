@@ -51,7 +51,7 @@ export class Node {
                 case MeshEventType.connectedToPeer:
                     this.onConnectedToPeer(<string> event.metadata);
                     break;
-                case MeshEventType.connectionClosed:
+                case MeshEventType.disconnectedFromNetwork:
                     this.onDisconnectedFromNetwork()
                     break;
             }
