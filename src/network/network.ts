@@ -26,16 +26,28 @@ export class NetworkEntity {
         this.connectionGraph = new ConnectionGraph(address);
 
         this.networkConnection = new Peer(this.address, {
-            // secure: true,
-            host: 'localhost',
-            key: 'peerjs',
-            port: 9000,
+            secure: true,
+            // host: 'localhost',
+            // key: 'peerjs',
+            // port: 9000,
             // debug: 3,
-            // config: {
-            //     'iceServers': [
-            //         { urls: 'stun:stun1.l.google.com:19302' }
-            //     ]
-            // }
+            config: {
+                iceServers: [
+                    { urls: ["stun:eu-turn1.xirsys.com"] },
+                    {
+                        username: "M2bPldrkkK-A2UhnkwWzhujF4UTcEdU0xWdZZswOb4L9UV7JgovgaLjcSlmqqVFoAAAAAF1j5zlwZWxpa2Fhbg==",
+                        credential: "98dbe8da-c80a-11e9-815c-169b39aff842",
+                        urls: [
+                            "turn:eu-turn1.xirsys.com:80?transport=udp",
+                            "turn:eu-turn1.xirsys.com:3478?transport=udp",
+                            "turn:eu-turn1.xirsys.com:80?transport=tcp",
+                            "turn:eu-turn1.xirsys.com:3478?transport=tcp",
+                            "turns:eu-turn1.xirsys.com:443?transport=tcp",
+                            "turns:eu-turn1.xirsys.com:5349?transport=tcp"
+                        ]
+                    }
+                ]
+            }
         });
 
         this.networkConnection.on('open', address => {
@@ -114,12 +126,14 @@ export class NetworkEntity {
                 type: MessageType.networkState,
                 sourceAddress: this.address,
                 index: this.networkStateIndex,
+                ttl: 0
             },
             body: {
                 neighbours: Object.keys(this.connections)
             }
         };
 
+        // Is a reliable way of sending messages between nodes because of tcp.
         this.sendMessage(networkState);
     }
 
