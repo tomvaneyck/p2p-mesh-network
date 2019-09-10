@@ -11,9 +11,14 @@ export class Node {
     public onConnectedToNetwork: ((address: string) => void) = function (localId: string) { };
     public onConnectedToPeer: ((address: string) => void) = function (localId: string) { };
     public onDisconnectedFromNetwork: (() => void) = function () { };
+    public onNetworkChange: (() => void) = function() { };
     
     private transportEntity: TransportEntity;
     private networkEntitity: NetworkEntity;
+
+    public get networkTopography() {
+        return this.networkEntitity.networkTopography;
+    }
 
     private incomingData: Subject<any> = new Subject<any>();
 
@@ -52,7 +57,10 @@ export class Node {
                     this.onConnectedToPeer(<string> event.metadata);
                     break;
                 case MeshEventType.connectionClosed:
-                    this.onDisconnectedFromNetwork()
+                    this.onDisconnectedFromNetwork();
+                    break;
+                case MeshEventType.networkChange:
+                    this.onNetworkChange();
                     break;
             }
         });
