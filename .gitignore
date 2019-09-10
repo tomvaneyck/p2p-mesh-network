@@ -93,3 +93,8 @@ package-lock.json
 .vscode
 .eslintcache
 package-lock.json
+
+# Own gitignores
+build/scripts
+tsc-build
+coverage
