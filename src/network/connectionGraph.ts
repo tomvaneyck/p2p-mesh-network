@@ -1,13 +1,14 @@
 import { Subject } from 'rxjs';
 import { MeshEvent, MeshEventType } from '../event';
-import { awesomeDebounce } from '../Reactive/ReactiveFunctions';
+import { debounceWithoutDelay } from '../Reactive/ReactiveFunctions';
+import { debounceTime } from 'rxjs/operators';
 
 export class ConnectionGraph {
     private address: string;
 
     private _events = new Subject<MeshEvent>();
     public get events() {
-        return awesomeDebounce(this._events, 3000);
+        return this._events.pipe(debounceTime(1000));
     }
     private notifyChange() {
         this._events.next({
