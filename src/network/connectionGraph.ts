@@ -7,7 +7,7 @@ export class ConnectionGraph {
 
     private _events = new Subject<MeshEvent>();
     public get events() {
-        return awesomeDebounce(this._events, 1000);
+        return awesomeDebounce(this._events, 3000);
     }
     private notifyChange() {
         this._events.next({
