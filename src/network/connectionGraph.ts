@@ -1,7 +1,26 @@
+import { Subject } from 'rxjs';
+import { MeshEvent, MeshEventType } from '../event';
+import { debounceWithoutDelay } from '../Reactive/ReactiveFunctions';
+import { debounceTime } from 'rxjs/operators';
+
 export class ConnectionGraph {
     private address: string;
+
+    private _events = new Subject<MeshEvent>();
+    public get events() {
+        return this._events.pipe(debounceTime(1000));
+    }
+    private notifyChange() {
+        this._events.next({
+            type: MeshEventType.networkChange,
+            message: "The network topography changed."
+        });
+    }
     
     private connections: Map<string, Set<string>> = new Map();
+    public get topography() {
+        return this.connections;
+    }
 
     constructor(address: string) {
         this.address = address;
@@ -15,11 +34,13 @@ export class ConnectionGraph {
     public addNode(address: string) {
         if (!  this.connections.has(address)) {
             this.connections.set(address, new Set());
+            this.notifyChange();
         }
     }
 
     public removeNode(address: string) {
         this.connections.delete(address);
+        this.notifyChange();
     }
     
     public setNodeNeighbours(address: string, neighbours: string[]) {
@@ -27,6 +48,7 @@ export class ConnectionGraph {
             this.addNode(neighbour);
         }
         this.connections.set(address, new Set(neighbours));
+        this.notifyChange();
     }
     
     public addConnection(source: string, destination: string): void {
@@ -37,6 +59,7 @@ export class ConnectionGraph {
         let destinationNeighbours: Set<string> = !this.connections.get(destination) ? new Set() : this.connections.get(destination)!;
         destinationNeighbours.add(source);
         this.connections.set(destination, destinationNeighbours);
+        this.notifyChange();
     }
 
     public constructRoutingTree(): RoutingTreeNode {
