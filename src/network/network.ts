@@ -21,9 +21,16 @@ export class NetworkEntity {
     private networkStateBuffer: { [address: string]: number } = {};
     private routingTable: RoutingTable = {};
 
+    public get networkTopography() {
+        return this.connectionGraph.topography;
+    }
+
     constructor(address: string) {
         this.address = address;
         this.connectionGraph = new ConnectionGraph(address);
+        this.connectionGraph.events.subscribe((event) => {
+            this.events.next(event);
+        });
 
         this.networkConnection = new Peer(this.address, {
             secure: true,
