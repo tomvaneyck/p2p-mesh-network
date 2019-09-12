@@ -1,4 +1,4 @@
-import { Message, MessageType, ConnectionAccepted, ConnectionRejected, EntryPoint, EntryPointRequest, NetworkState, NetworkStateRequest, MessageWithIndex } from '../message';
+import { Message, MessageType, ConnectionAccepted, ConnectionRejected, EntryPoint, EntryPointRequest, NetworkState, NetworkStateRequest } from '../message';
 import Peer, { DataConnection } from "peerjs";
 import { Subject, ReplaySubject } from 'rxjs';
 import { MeshEvent, MeshEventType } from '../event';
@@ -21,20 +21,10 @@ export class NetworkEntity {
     private minimumNumberhOfConnections: number = 5;
     private maximumNumberOfConnections: number = 10;
     // Boolean is temporary check.
-    private connections: { [address: string]: Connection } = {};
+    private connections: { [address: string]: DataConnection } = {};
+    private temporaryConnections: { [address: string]: DataConnection } = {};
     private get numberOfConnections(): number {
         return Object.keys(this.connections).length;
-    }
-    private get temporaryConnections(): string[] {
-        let temporaryConnections: string[] = [];
-
-        for (let connection of Object.keys(this.connections)) {
-            if (this.connections[connection].temporary) {
-                temporaryConnections.push(connection);
-            }
-        }
-
-        return temporaryConnections;
     }
     private connectionGraph: ConnectionGraph;
     private routingTable: RoutingTable = {};
@@ -154,7 +144,7 @@ export class NetworkEntity {
             throw Error(error);
         });
 
-        this.connections[connection.peer] = { dataConnection: connection, temporary: true };
+        this.temporaryConnections[connection.peer] = connection;
 
         if (incoming) {
             // Checking if connection is allowed.
@@ -163,7 +153,7 @@ export class NetworkEntity {
                     header: {
                         type: MessageType.connectionAccepted,
                         sourceAddress: this.address,
-                        destinationAdrress: connection.peer
+                        destinationAddress: connection.peer
                     }
                 };
                 this.sendMessage(connectionAccepted)
@@ -185,6 +175,9 @@ export class NetworkEntity {
     }
 
     private handleAcceptedConnection(connection: DataConnection) {
+        this.connections[connection.peer] = connection;
+        delete this.temporaryConnections[connection.peer];
+
         this.connectionGraph.addConnection(this.address, connection.peer);
 
         this.sendNewNetworkState();
@@ -228,15 +221,20 @@ export class NetworkEntity {
         switch (message.header.type) {
             case MessageType.unicast:
             case MessageType.acknowledgement:
+            case MessageType.entryPoint:
                 let nextHop: string = this.routingTable[message.header.destinationAddress!];
-                this.connections[nextHop].dataConnection.send(message);
+                this.connections[nextHop].send(message);
+                break;
+            case MessageType.connectionAccepted:
+            case MessageType.connectionRejected:
+                this.temporaryConnections[message.header.destinationAddress!].send(message);
                 break;
             case MessageType.broadcast:
             case MessageType.networkState:
             case MessageType.networkStateRequest:
             default:
                 for (let address in this.connections) {
-                    this.connections[address].dataConnection.send(message);
+                    this.connections[address].send(message);
                 }
         }
     }
@@ -246,13 +244,13 @@ export class NetworkEntity {
             case MessageType.connectionAccepted:
                 let connectionAccepted = message as ConnectionAccepted;
 
-                this.handleAcceptedConnection(this.connections[connectionAccepted.header.sourceAddress].dataConnection);
+                this.handleAcceptedConnection(this.temporaryConnections[connectionAccepted.header.sourceAddress]);
                 break;
             case MessageType.connectionRejected:
                 let connectionRejected = message as ConnectionRejected;
                 
-                this.connections[connectionRejected.header.sourceAddress];
                 delete this.connections[connectionRejected.header.sourceAddress];
+                this.connectToPeer(connectionRejected.body.newEntryPoint);
                 
                 this.events.next({
                     type: MeshEventType.connectionToPeerRejected,
@@ -260,15 +258,15 @@ export class NetworkEntity {
                 })
                 break;
             case MessageType.entryPoint:
-                this.forwardOrDoAction(message, (message: Message) => {
+                this.unicastHandler(message, (message: Message) => {
                     let entryPoint = message as EntryPoint;
 
-                    this.temporaryConnections.forEach((address) => {
+                    for (let address in this.temporaryConnections) {
                         let connectionRejected: ConnectionRejected = {
                             header: {
                                 type: MessageType.connectionRejected,
                                 sourceAddress: this.address,
-                                destinationAdrress: address
+                                destinationAddress: address
                             },
                             body: {
                                 newEntryPoint: entryPoint.body.EntryPointAddress
@@ -276,8 +274,9 @@ export class NetworkEntity {
                         };
 
                         this.sendMessage(connectionRejected);
-                    });
-                })
+                        delete this.temporaryConnections[address];
+                    }
+                });
                 break;
             case MessageType.entryPointRequest:
                 let entryPointRequest = message as EntryPointRequest;
@@ -296,13 +295,13 @@ export class NetworkEntity {
                     this.sendMessage(entryPoint);
                 }
                 else {
-                    this.forwardAndDoActionIfNew(entryPointRequest, () => {});
+                    this.broadcastHandler(entryPointRequest, () => {});
                 }
                 break;
             case MessageType.networkState:
                 let networkState = message as NetworkState;
 
-                this.forwardAndDoActionIfNew(networkState, (networkState: MessageWithIndex) => {
+                this.broadcastHandler(networkState, (networkState: Message) => {
                     this.connectionGraph.setNodeNeighbours(networkState.header.sourceAddress, networkState.body.neighbours);
                     this.routingTable = this.connectionGraph.makeRoutingTable();
                 });
@@ -310,7 +309,7 @@ export class NetworkEntity {
             case MessageType.networkStateRequest:
                 let networkStateRequest = message as NetworkStateRequest;
                 
-                this.forwardAndDoActionIfNew(networkStateRequest, () => {
+                this.broadcastHandler(networkStateRequest, () => {
                     this.sendNewNetworkState();
                 });
                 break;
@@ -318,14 +317,14 @@ export class NetworkEntity {
                 this.incomingMessages.next(message);
                 break;
             default:
-                this.forwardOrDoAction(message, (message: Message) => {
+                this.unicastHandler(message, (message: Message) => {
                     this.incomingMessages.next(message);
                 });
         }
     }
 
     // Checks if the message is destined for this node and take appropriate action.
-    private forwardOrDoAction(message: Message, callback: (message: Message) => any): void {
+    private unicastHandler(message: Message, callback: (message: Message) => any): void {
         if (message.header.destinationAddress === this.address) {
             callback(message);
         } else {
@@ -333,14 +332,15 @@ export class NetworkEntity {
         }
     }
 
-    private forwardAndDoActionIfNew(message: MessageWithIndex, callback: (message: MessageWithIndex) => any): void {
+    private broadcastHandler(message: Message, callback: (message: Message) => any): void {
+        let index: number = message.header.index!;
         let bufferedIndex: number = this.messageIndexBuffer[message.header.sourceAddress];
-        let index: number = message.header.index;
 
-        if (index > bufferedIndex || bufferedIndex === undefined) {
+        if (index === undefined || bufferedIndex === undefined || index > bufferedIndex) {
             callback(message);
-            bufferedIndex = index;
+            this.messageIndexBuffer[message.header.sourceAddress] = index;
             this.sendMessage(message);
+            console.log("broadcastHandler", message);
         }
     }
 
@@ -349,9 +349,4 @@ export class NetworkEntity {
     //         this.
     //     }
     // }
-}
-
-interface Connection {
-    dataConnection: DataConnection,
-    temporary: boolean
 }

@@ -4,7 +4,7 @@ export interface ConnectionAccepted extends Message {
     header: {
         type: MessageType.connectionAccepted,
         sourceAddress: string,
-        destinationAdrress: string
+        destinationAddress: string
     }
 }
 
@@ -12,7 +12,7 @@ export interface ConnectionRejected extends Message {
     header: {
         type: MessageType.connectionRejected,
         sourceAddress: string,
-        destinationAdrress: string
+        destinationAddress: string
     },
     body: {
         newEntryPoint: string
@@ -30,7 +30,7 @@ export interface EntryPoint extends Message {
     }
 }
 
-export interface EntryPointRequest extends MessageWithIndex {
+export interface EntryPointRequest extends Message {
     header: {
         type: MessageType.entryPointRequest,
         sourceAddress: string,
@@ -38,7 +38,7 @@ export interface EntryPointRequest extends MessageWithIndex {
     }
 }
 
-export interface NetworkState extends MessageWithIndex {
+export interface NetworkState extends Message {
     header: {
         type: MessageType.networkState,
         sourceAddress: string,
@@ -49,7 +49,7 @@ export interface NetworkState extends MessageWithIndex {
     }
 }
 
-export interface NetworkStateRequest extends MessageWithIndex {
+export interface NetworkStateRequest extends Message {
     header: {
         type: MessageType.networkStateRequest,
         sourceAddress: string,
@@ -90,15 +90,8 @@ export interface MessageHeader {
     type: MessageType,
     sourceAddress: string,
     destinationAddress?: string,
+    index?: number,
     ttl?: number
-}
-
-export interface MessageWithIndex extends Message {
-    header: {
-        type: MessageType,
-        sourceAddress: string,
-        index: number
-    }
 }
 
 export interface MessageQueue {
