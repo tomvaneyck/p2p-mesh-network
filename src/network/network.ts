@@ -28,6 +28,7 @@ export class NetworkEntity {
     }
     private connectionGraph: ConnectionGraph;
     private routingTable: RoutingTable = {};
+    private farthestUnconnectedNode: string | undefined = undefined;
 
     public get networkTopography() {
         return this.connectionGraph.topography;
@@ -38,6 +39,11 @@ export class NetworkEntity {
         this.connectionGraph = new ConnectionGraph(address);
         this.connectionGraph.events.subscribe((event) => {
             this.events.next(event);
+            if (event.type == MeshEventType.networkChange) {
+                this.routingTable = this.connectionGraph.makeRoutingTable();
+                this.findFarthestUnconnectedNode();
+                this.balanceNetwork();
+            }
         });
 
         this.networkConnection = new Peer(this.address, {
@@ -222,7 +228,7 @@ export class NetworkEntity {
             case MessageType.unicast:
             case MessageType.acknowledgement:
             case MessageType.entryPoint:
-                let nextHop: string = this.routingTable[message.header.destinationAddress!];
+                let nextHop: string = this.routingTable[message.header.destinationAddress!].nextHop;
                 this.connections[nextHop].send(message);
                 break;
             case MessageType.connectionAccepted:
@@ -303,7 +309,6 @@ export class NetworkEntity {
 
                 this.broadcastHandler(networkState, (networkState: Message) => {
                     this.connectionGraph.setNodeNeighbours(networkState.header.sourceAddress, networkState.body.neighbours);
-                    this.routingTable = this.connectionGraph.makeRoutingTable();
                 });
                 break;
             case MessageType.networkStateRequest:
@@ -344,9 +349,26 @@ export class NetworkEntity {
         }
     }
 
-    // private balanceConnections(): void {
-    //     if (this.numberOfConnections < this.connectionGraph.numberOfNodes) {
-    //         this.
-    //     }
-    // }
+    private findFarthestUnconnectedNode() {
+        let farthestNode: string | undefined;
+        let distance: number = 0;
+
+        for (let node in this.routingTable) {
+            if (!(node in this.connections) && this.routingTable[node].distance > distance) {
+                farthestNode = node;
+            }
+        }
+
+        this.farthestUnconnectedNode = farthestNode;
+    }
+    
+    private balanceNetwork(): void {
+        if (this.farthestUnconnectedNode
+            && this.numberOfConnections < this.minimumNumberhOfConnections
+            && this.numberOfConnections < this.connectionGraph.numberOfNodes - 1) {
+            this.connectToPeer(this.farthestUnconnectedNode);
+            // Renewing farthest node because of previous connect.
+            this.findFarthestUnconnectedNode();
+        }
+    }
 }

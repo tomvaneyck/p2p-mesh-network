@@ -1,6 +1,5 @@
 import { Subject } from 'rxjs';
 import { MeshEvent, MeshEventType } from '../event';
-import { debounceWithoutDelay } from '../Reactive/ReactiveFunctions';
 import { debounceTime } from 'rxjs/operators';
 
 export class ConnectionGraph {
@@ -20,6 +19,9 @@ export class ConnectionGraph {
     private connections: Map<string, Set<string>> = new Map();
     public get topography() {
         return this.connections;
+    }
+    public get numberOfNodes() {
+        return this.connections.size;
     }
 
     constructor(address: string) {
@@ -102,11 +104,14 @@ export class ConnectionGraph {
         return root;
     }
     
-    private addToRoutingTable(nextHop: string, currentNode: RoutingTreeNode, routingTable: RoutingTable): void {
-        routingTable[currentNode.address] = nextHop;
+    private addToRoutingTable(nextHop: string, currentNode: RoutingTreeNode, distance: number, routingTable: RoutingTable): void {
+        routingTable[currentNode.address] = {
+            nextHop: nextHop,
+            distance: distance
+        };
 
         for (let treeNode of currentNode.children) {
-            this.addToRoutingTable(nextHop, treeNode, routingTable);
+            this.addToRoutingTable(nextHop, treeNode, distance + 1, routingTable);
         }
     }
     
@@ -115,7 +120,7 @@ export class ConnectionGraph {
 
         let routingTable: RoutingTable = {};
         for (let treeNode of root.children) {
-            this.addToRoutingTable(treeNode.address, treeNode, routingTable);
+            this.addToRoutingTable(treeNode.address, treeNode, 1, routingTable);
         }
 
         return routingTable;
@@ -128,5 +133,8 @@ interface RoutingTreeNode {
 }
 
 export interface RoutingTable {
-    [address: string]: string
+    [address: string]: {
+        nextHop: string,
+        distance: number
+    }
 }
