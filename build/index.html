@@ -21,6 +21,7 @@
 		networkNode.onConnectedToPeer = function(user) {
 			let otherAddress = document.getElementById("otherAddress");
 			otherAddress.innerText = user;
+			otherAddress.style.color = intToRGB(hashCode(user));
 			console.log("A connection was made to peer", user);
 		};
 		networkNode.onDisconnectedFromNetwork = function() {
@@ -31,6 +32,7 @@
 		networkNode.onConnectedToNetwork = function(localNodeId) {
 			let localAddress = document.getElementById("localAddress");
 			localAddress.innerText = localNodeId;
+			localAddress.style.color = intToRGB(hashCode(localNodeId));
 			console.log("Connected to network with id:", localNodeId);
 		};
 
@@ -60,7 +62,7 @@
 			let nodes = new Map();
 
 			for (let node of networkNode.networkTopography.keys()) {
-				nodes.set(node, graph.newNode({ label: node }));
+				nodes.set(node, graph.newNode({ label: node, color: ("#" + intToRGB(hashCode(node))) }));
 			}
 
 			for (let edges of networkNode.networkTopography.entries()) {
@@ -70,6 +72,34 @@
 			}
 
 			$('.network-graph').springy({ graph: graph });
+		}
+
+		function hashCode(str) { // java String#hashCode
+			var hash = 0;
+			for (var i = 0; i < str.length; i++) {
+				hash = str.charCodeAt(i) + ((hash << 5) - hash);
+			}
+			return hash;
+		}
+
+		function intToRGB(i) {
+			var c = (i & 0x00FFFFFF)
+				.toString(16)
+				.toUpperCase();
+
+			return "00000".substring(0, 6 - c.length) + c;
+		}
+
+		function generateTextColor(color) {
+			var red = parseInt(color.substring(0, 2), 16);
+			var green = parseInt(color.substring(2, 4), 16);
+			var blue = parseInt(color.substring(4, 6), 16);
+			
+			if ((red * 0.299 + green * 0.587 + blue * 0.114) > 186) {
+				return "000000";
+			} else {
+				return "ffffff";
+			}
 		}
 	</script>
 	<style>
