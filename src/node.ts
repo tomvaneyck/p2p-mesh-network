@@ -44,7 +44,8 @@ export class Node {
                 case MeshEventType.timeOut:
                     console.log("Metadata of incoming error:", event.metadata);
                     throw Error(event.message);
-                    
+                default:
+                    console.log(event.message, event);
             }
         });
 
@@ -56,12 +57,14 @@ export class Node {
                 case MeshEventType.connectedToPeer:
                     this.onConnectedToPeer(<string> event.metadata);
                     break;
-                case MeshEventType.connectionClosed:
-                    this.onDisconnectedFromNetwork();
+                case MeshEventType.disconnectedFromNetwork:
+                    this.onDisconnectedFromNetwork()
                     break;
                 case MeshEventType.networkChange:
                     this.onNetworkChange();
                     break;
+                default:
+                    console.log(event.message, event);
             }
         });
     }

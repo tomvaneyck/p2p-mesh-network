@@ -1,23 +1,44 @@
 import { ReactiveQueue } from './Reactive/ReactiveQueue';
 
-export interface Message {
-    // uid?: MessageUid,
-    header: MessageHeader,
-    body?: any
+export interface ConnectionAccepted extends Message {
+    header: {
+        type: MessageType.connectionAccepted,
+        sourceAddress: string,
+        destinationAddress: string
+    }
 }
 
-export interface Acknowledgement extends Message {
+export interface ConnectionRejected extends Message {
     header: {
-        type: MessageType.acknowledgement,
+        type: MessageType.connectionRejected,
         sourceAddress: string,
         destinationAddress: string
     },
     body: {
+        newEntryPoint: string
+    }
+}
+
+export interface EntryPoint extends Message {
+    header: {
+        type: MessageType.entryPoint,
+        sourceAddress: string,
+        destinationAddress: string,
+    },
+    body: {
+        EntryPointAddress: string
+    }
+}
+
+export interface EntryPointRequest extends Message {
+    header: {
+        type: MessageType.entryPointRequest,
+        sourceAddress: string,
         index: number
     }
 }
 
-export interface NetworkStateMessage extends Message {
+export interface NetworkState extends Message {
     header: {
         type: MessageType.networkState,
         sourceAddress: string,
@@ -36,10 +57,34 @@ export interface NetworkStateRequest extends Message {
     }
 }
 
-// export interface MessageUid {
-//     sourceNodeUuid: string,
-//     index: number
-// }
+export interface Acknowledgement extends Message {
+    header: {
+        type: MessageType.acknowledgement,
+        sourceAddress: string,
+        destinationAddress: string
+    },
+    body: {
+        index: number
+    }
+}
+
+export enum MessageType {
+    connectionAccepted,
+    connectionRejected,
+    entryPointRequest,
+    entryPoint,
+    networkState,
+    networkStateRequest,
+    unicast,
+    broadcast,
+    acknowledgement
+}
+
+export interface Message {
+    // uid?: MessageUid,
+    header: MessageHeader,
+    body?: any
+}
 
 export interface MessageHeader {
     type: MessageType,
@@ -47,19 +92,6 @@ export interface MessageHeader {
     destinationAddress?: string,
     index?: number,
     ttl?: number
-}
-
-export enum MessageType {
-    networkState,
-    networkStateRequest,
-    unicast,
-    broadcast,
-    connectNode,
-    disconnectNode,
-    // new_edge,
-    // destroy_edge,
-    // announcement,
-    acknowledgement
 }
 
 export interface MessageQueue {
