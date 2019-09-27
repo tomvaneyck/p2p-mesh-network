@@ -12,29 +12,29 @@
 	<script type="text/javascript">
 		let networkNode = new Meshnetwork.Node();
 
-		networkNode.onMessageReceived = function (src, data) {
+		networkNode.onMessageReceived(function (src, data) {
 			let log = document.getElementById("log");
 			log.value = log.value + src + " sent " + data + "\n";
 			log.scrollTop = log.scrollHeight;
-		};
+		});
 
-		networkNode.onConnectedToPeer = function(user) {
+		networkNode.onConnectedToPeer(function(user) {
 			let otherAddress = document.getElementById("otherAddress");
 			otherAddress.innerText = user;
 			otherAddress.style.color = intToRGB(hashCode(user));
 			console.log("A connection was made to peer", user);
-		};
-		networkNode.onDisconnectedFromNetwork = function() {
+		});
+		networkNode.onDisconnectedFromNetwork(function() {
 			document.getElementById("localAddress").innerText = "";
 			document.getElementById("otherAddress").innerText = "";
 			console.log("Disconnected from network.");
-		};
-		networkNode.onConnectedToNetwork = function(localNodeId) {
+		});
+		networkNode.onConnectedToNetwork(function(localNodeId) {
 			let localAddress = document.getElementById("localAddress");
 			localAddress.innerText = localNodeId;
 			localAddress.style.color = intToRGB(hashCode(localNodeId));
 			console.log("Connected to network with id:", localNodeId);
-		};
+		});
 
 		function onConnectButtonClicked() {
 			let address = document.getElementById("peerIdTextInput").value;
@@ -57,7 +57,7 @@
 		}
 
 		// Graph visualisation.
-		networkNode.onNetworkChange = function() {
+		networkNode.onNetworkChange(function() {
 			let graph = new Springy.Graph();
 			let nodes = new Map();
 
@@ -72,7 +72,7 @@
 			}
 
 			$('.network-graph').springy({ graph: graph });
-		}
+		});
 
 		function hashCode(str) { // java String#hashCode
 			var hash = 0;

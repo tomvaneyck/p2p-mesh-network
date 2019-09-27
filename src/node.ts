@@ -4,23 +4,69 @@ import { Message, MessageType } from './message';
 import { NetworkEntity } from './network/network';
 import { MeshEventType, MeshEvent } from './event';
 
-export class Node {
-    private address: string = this.generateUuidv4();
-    
-    public onMessageReceived: ((source: string, msg: any) => void) = function (source: string, msg: any) { };
-    public onConnectedToNetwork: ((address: string) => void) = function (localId: string) { };
-    public onConnectedToPeer: ((address: string) => void) = function (localId: string) { };
-    public onDisconnectedFromNetwork: (() => void) = function () { };
-    public onNetworkChange: (() => void) = function() { };
-    
+export interface MeshNetwork {
+    readonly address: string,
+    readonly networkTopography: Map<string, Set<string>>,
+
+    onMessageReceived(callback: (source: string, msg: any) => void): void,
+    onConnectedToNetwork(callback: (address: string) => void): void;
+    onDisconnectedFromNetwork(callback: () => void): void;
+    onConnectedToPeer(callback: (address: string) => void): void;
+    onNetworkChange(callback: () => void): void;
+
+    connectToPeer(address: string): void;
+
+    sendData(data: any): void;
+    sendData(data: any, destinationAddress: string): void;
+    sendData(data: any, destinationAddress?: string): void;
+}
+
+export class Node implements MeshNetwork {
+    private readonly _address: string = this.generateUuidv4();
+    public get address() {
+        return this._address;
+    }
+
+    private receivedMessages = new Subject<Message>();
+    public onMessageReceived(callback: (source: string, msg: any) => void) {
+        this.receivedMessages.subscribe((message: Message) => {
+            callback(message.header.sourceAddress, message.body);
+        });
+    }
+    private connectionToNetwork = new Subject<boolean>();
+    public onConnectedToNetwork(callback: (address: string) => void) {
+        this.connectionToNetwork.subscribe((connected: boolean) => {
+            if (connected) {
+                callback(this.address);
+            }
+        });
+    }
+    public onDisconnectedFromNetwork(callback: () => void) {
+        this.connectionToNetwork.subscribe((connected: boolean) => {
+            if (!connected) {
+                callback();
+            }
+        });
+    }
+    private connectionsToPeer = new Subject<string>();
+    public onConnectedToPeer(callback: (address: string) => void) {
+        this.connectionsToPeer.subscribe((address: string) => {
+            callback(address);
+        });
+    }
+    private networkChange = new Subject<undefined>();
+    public onNetworkChange(callback: () => void) {
+        this.networkChange.subscribe(() => {
+            callback();
+        });
+    }
+
     private transportEntity: TransportEntity;
     private networkEntitity: NetworkEntity;
 
     public get networkTopography() {
         return this.networkEntitity.networkTopography;
     }
-
-    private incomingData: Subject<any> = new Subject<any>();
 
     constructor() {
         this.networkEntitity = new NetworkEntity(this.address);
@@ -29,8 +75,7 @@ export class Node {
             this.networkEntitity
         );
         this.transportEntity.incomingMessages.subscribe((message: Message) => {
-            this.incomingData.next(message.body);
-            this.onMessageReceived(message.header.sourceAddress, message.body);
+            this.receivedMessages.next(message);
         });
 
         this.transportEntity.events.subscribe((event: MeshEvent) => {
@@ -52,16 +97,16 @@ export class Node {
         this.networkEntitity.events.subscribe((event: MeshEvent) => {
             switch (event.type) {
                 case MeshEventType.connectedToNetwork:
-                    this.onConnectedToNetwork(<string> event.metadata);
+                    this.connectionToNetwork.next(true);
                     break;
                 case MeshEventType.connectedToPeer:
-                    this.onConnectedToPeer(<string> event.metadata);
+                    this.connectionsToPeer.next(event.metadata);
                     break;
                 case MeshEventType.disconnectedFromNetwork:
-                    this.onDisconnectedFromNetwork()
+                    this.connectionToNetwork.next(false);
                     break;
                 case MeshEventType.networkChange:
-                    this.onNetworkChange();
+                    this.networkChange.next();
                     break;
                 default:
                     console.log(event.message, event);
@@ -69,10 +114,10 @@ export class Node {
         });
     }
 
-    public connectToPeer(address: string) {
+    public connectToPeer(address: string): void {
         this.networkEntitity.connectToPeer(address);
     }
-    
+
     public sendData(data: any): void;
     public sendData(data: any, destinationAddress: string): void;
     public sendData(data: any, destinationAddress?: string): void {
@@ -95,7 +140,7 @@ export class Node {
                 body: data
             }
         }
-        
+
         this.transportEntity.sendMessage(message);
     }
 
