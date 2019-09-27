@@ -137,6 +137,9 @@ export class NetworkEntity {
                 type: MeshEventType.disconnectedFromPeer,
                 metadata: connection.peer
             });
+            delete this.connections[connection.peer];
+            delete this.temporaryConnections[connection.peer];
+            this.connectionGraph.removeNeighbour(connection.peer);
             this.sendNewNetworkState();
         })
         
@@ -146,6 +149,9 @@ export class NetworkEntity {
                 type: MeshEventType.disconnectedFromPeer,
                 metadata: connection.peer
             });
+            delete this.connections[connection.peer];
+            delete this.temporaryConnections[connection.peer];
+            this.connectionGraph.removeNeighbour(connection.peer);
             this.sendNewNetworkState();
             throw Error(error);
         });
