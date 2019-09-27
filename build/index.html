@@ -56,9 +56,11 @@
 			textArea.remove();
 		}
 
+		let graph = new Springy.Graph();
+
 		// Graph visualisation.
 		networkNode.onNetworkChange(function() {
-			let graph = new Springy.Graph();
+			springy.clear();
 			let nodes = new Map();
 
 			for (let node of networkNode.networkTopography.keys()) {
@@ -70,8 +72,6 @@
 					graph.newEdge(nodes.get(edges[0]), nodes.get(node));
 				}
 			}
-
-			$('.network-graph').springy({ graph: graph });
 		});
 
 		function hashCode(str) { // java String#hashCode
@@ -151,6 +151,8 @@
 			canvas.width = canvas.offsetWidth;
 			canvas.height = canvas.offsetHeight;
 		}
+
+		var springy = $('.network-graph').springy({ graph: graph });
 	</script>
 </body>
 </html>
