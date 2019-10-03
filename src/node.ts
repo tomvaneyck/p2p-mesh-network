@@ -4,7 +4,7 @@ import { Message, MessageType } from './message';
 import { NetworkEntity } from './network/network';
 import { MeshEventType, MeshEvent } from './event';
 
-export interface MeshNetwork {
+interface MeshNetwork {
     readonly address: string,
     readonly networkTopography: Map<string, Set<string>>,
 
