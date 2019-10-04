@@ -1,7 +1,9 @@
 {
-  "name": "mesh-networking",
-  "version": "0.9.0",
-  "description": "",
+  "name": "p2p-mesh-network",
+  "version": "0.1.0",
+  "description": "A peer to peer mesh networking module.",
+  "main": "dist/node.js",
+  "types": "dist/node.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/tomvaneyck/p2p-mesh-network.git"
@@ -11,31 +13,25 @@
   },
   "homepage": "https://github.com/tomvaneyck/p2p-mesh-network/",
   "dependencies": {
-    "eventemitter3": "^3.1.2",
-    "express": "^4.16.4",
-    "js-binarypack": "0.0.9",
-    "opencollective": "^1.0.3",
-    "opencollective-postinstall": "^2.0.2",
     "peerjs": "^1.0.0",
-    "reliable": "^1.0.0",
-    "rxjs": "^6.5.1",
-    "tslint": "^5.16.0",
-    "webrtc-adapter": "^6.4.8"
+    "rxjs": "^6.5.1"
   },
   "devDependencies": {
-    "codeceptjs": "^2.1.1",
-    "expect.js": "^0.3.1",
-    "mocha": "^5.2.0",
+    "np": "^5.1.0",
     "peer": "^0.2.10",
-    "ts-loader": "^5.4.5",
-    "typescript": "^3.4.5",
-    "webpack": "^4.31.0",
-    "webpack-cli": "^3.3.2"
+    "ts-loader": "^6.2.0",
+    "typescript": "^3.6.3",
+    "webpack": "^4.41.0",
+    "webpack-cli": "^3.3.9"
   },
-  "private": true,
+  "files": [
+    "/dist"
+  ],
   "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "build-and-start": "webpack --config webpack.config.js && peerjs --port 9000 --key peerjs"
+    "build": "rm -r dist && tsc",
+    "prepublishOnly": "npm run build",
+    "test": "rm -r dist && webpack --config webpack.config.js",
+    "test-with-server": "webpack --config webpack.config.js && peerjs --port 9000 --key peerjs"
   },
   "author": "Tom Van Eyck & Wouter De Keersmaecker",
   "license": "MIT"

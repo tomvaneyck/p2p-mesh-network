@@ -1,10 +1,15 @@
 import { TransportEntity } from './transport';
 import { Subject } from 'rxjs';
 import { Message, MessageType } from './message';
-import { NetworkEntity } from './network/network';
+import { NetworkEntity, IceServer } from './network/network';
 import { MeshEventType, MeshEvent } from './event';
 
-export interface MeshNetwork {
+export {
+    Node,
+    IceServer
+}
+
+interface MeshNetwork {
     readonly address: string,
     readonly networkTopography: Map<string, Set<string>>,
 
@@ -21,7 +26,7 @@ export interface MeshNetwork {
     sendData(data: any, destinationAddress?: string): void;
 }
 
-export class Node implements MeshNetwork {
+class Node implements MeshNetwork {
     private readonly _address: string = this.generateUuidv4();
     public get address() {
         return this._address;
@@ -68,8 +73,8 @@ export class Node implements MeshNetwork {
         return this.networkEntitity.networkTopography;
     }
 
-    constructor() {
-        this.networkEntitity = new NetworkEntity(this.address);
+    constructor(iceServers?: IceServer[]) {
+        this.networkEntitity = new NetworkEntity(this.address, iceServers);
         this.transportEntity = new TransportEntity(
             this.address,
             this.networkEntitity

@@ -5,12 +5,28 @@
 		// TypeScript 2.2 requires 'exports' global variable.
 		var exports = {};
 	</script> -->
-	<script type="text/javascript" src="scripts/node.js"></script>
+	<script type="text/javascript" src="./scripts/node.js"></script>
 	<script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
-	<script src="scripts/springy.js"></script>
-	<script src="scripts/springyui.js"></script>
+	<script type="text/javascript" src="./scripts/springy.js"></script>
+	<script type="text/javascript" src="./scripts/springyui.js"></script>
 	<script type="text/javascript">
-		let networkNode = new Meshnetwork.Node();
+		let iceServers = [
+				{ urls: ["stun:eu-turn1.xirsys.com"] },
+				{
+					username: "M2bPldrkkK-A2UhnkwWzhujF4UTcEdU0xWdZZswOb4L9UV7JgovgaLjcSlmqqVFoAAAAAF1j5zlwZWxpa2Fhbg==",
+					credential: "98dbe8da-c80a-11e9-815c-169b39aff842",
+					urls: [
+						"turn:eu-turn1.xirsys.com:80?transport=udp",
+						"turn:eu-turn1.xirsys.com:3478?transport=udp",
+						"turn:eu-turn1.xirsys.com:80?transport=tcp",
+						"turn:eu-turn1.xirsys.com:3478?transport=tcp",
+						"turns:eu-turn1.xirsys.com:443?transport=tcp",
+						"turns:eu-turn1.xirsys.com:5349?transport=tcp"
+					]
+				}
+			]
+	
+		let networkNode = new Meshnetwork.Node(iceServers);
 
 		networkNode.onMessageReceived(function (src, data) {
 			let log = document.getElementById("log");
@@ -56,9 +72,11 @@
 			textArea.remove();
 		}
 
+		let graph = new Springy.Graph();
+
 		// Graph visualisation.
 		networkNode.onNetworkChange(function() {
-			let graph = new Springy.Graph();
+			springy.clear();
 			let nodes = new Map();
 
 			for (let node of networkNode.networkTopography.keys()) {
@@ -70,8 +88,6 @@
 					graph.newEdge(nodes.get(edges[0]), nodes.get(node));
 				}
 			}
-
-			$('.network-graph').springy({ graph: graph });
 		});
 
 		function hashCode(str) { // java String#hashCode
@@ -151,6 +167,8 @@
 			canvas.width = canvas.offsetWidth;
 			canvas.height = canvas.offsetHeight;
 		}
+
+		var springy = $('.network-graph').springy({ graph: graph });
 	</script>
 </body>
 </html>

@@ -34,7 +34,7 @@ export class NetworkEntity {
         return this.connectionGraph.topography;
     }
 
-    constructor(address: string) {
+    constructor(address: string, iceServers?: IceServer[]) {
         this.address = address;
         this.connectionGraph = new ConnectionGraph(address);
         this.connectionGraph.events.subscribe((event) => {
@@ -48,26 +48,8 @@ export class NetworkEntity {
 
         this.networkConnection = new Peer(this.address, {
             secure: true,
-            // host: 'localhost',
-            // key: 'peerjs',
-            // port: 9000,
-            // debug: 3,
             config: {
-                iceServers: [
-                    { urls: ["stun:eu-turn1.xirsys.com"] },
-                    {
-                        username: "M2bPldrkkK-A2UhnkwWzhujF4UTcEdU0xWdZZswOb4L9UV7JgovgaLjcSlmqqVFoAAAAAF1j5zlwZWxpa2Fhbg==",
-                        credential: "98dbe8da-c80a-11e9-815c-169b39aff842",
-                        urls: [
-                            "turn:eu-turn1.xirsys.com:80?transport=udp",
-                            "turn:eu-turn1.xirsys.com:3478?transport=udp",
-                            "turn:eu-turn1.xirsys.com:80?transport=tcp",
-                            "turn:eu-turn1.xirsys.com:3478?transport=tcp",
-                            "turns:eu-turn1.xirsys.com:443?transport=tcp",
-                            "turns:eu-turn1.xirsys.com:5349?transport=tcp"
-                        ]
-                    }
-                ]
+                iceServers: iceServers
             }
         });
 
@@ -137,6 +119,9 @@ export class NetworkEntity {
                 type: MeshEventType.disconnectedFromPeer,
                 metadata: connection.peer
             });
+            delete this.connections[connection.peer];
+            delete this.temporaryConnections[connection.peer];
+            this.connectionGraph.removeNeighbour(connection.peer);
             this.sendNewNetworkState();
         })
         
@@ -146,6 +131,9 @@ export class NetworkEntity {
                 type: MeshEventType.disconnectedFromPeer,
                 metadata: connection.peer
             });
+            delete this.connections[connection.peer];
+            delete this.temporaryConnections[connection.peer];
+            this.connectionGraph.removeNeighbour(connection.peer);
             this.sendNewNetworkState();
             throw Error(error);
         });
@@ -371,4 +359,10 @@ export class NetworkEntity {
             this.findFarthestUnconnectedNode();
         }
     }
+}
+
+export interface IceServer {
+    username?: string,
+    credential?: string,
+    urls: string[]
 }

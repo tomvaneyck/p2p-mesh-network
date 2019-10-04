@@ -4,7 +4,7 @@ module.exports = {
   entry: "./src/node.ts",
   devtool: 'inline-source-map',
   output: {
-    path: path.resolve(__dirname, "build/scripts"),
+    path: path.resolve(__dirname, "test/scripts"),
     filename: "node.js",
     libraryTarget: "var",
     library: "Meshnetwork"
@@ -23,4 +23,3 @@ module.exports = {
   },
   mode: "development"
 };
- 

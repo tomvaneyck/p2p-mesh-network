@@ -96,6 +96,12 @@ jQuery.fn.springy = function(params) {
 		renderer.start();
 	});
 
+	this.clear = function () {
+		for (var i = graph.nodes.length - 1; i >= 0; i--) {
+			graph.removeNode(graph.nodes[i]);
+		}
+	}
+
 	// Basic double click handler
 	jQuery(canvas).dblclick(function(e) {
 		var pos = jQuery(this).offset();

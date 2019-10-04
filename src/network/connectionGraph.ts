@@ -41,7 +41,17 @@ export class ConnectionGraph {
     }
 
     public removeNode(address: string) {
-        this.connections.delete(address);
+        let neighbours = this.connections.get(address);
+        if (neighbours && neighbours.size == 0) {
+            this.connections.delete(address);
+            this.notifyChange();
+        }
+    }
+
+    public removeNeighbour(address: string) {
+        this.connections.get(this.address)!.delete(address);
+        this.connections.get(address)!.delete(this.address);
+        this.removeNode(address);
         this.notifyChange();
     }
     
