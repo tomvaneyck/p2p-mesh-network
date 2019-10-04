@@ -25,7 +25,7 @@
   },
   "scripts": {
     "build-ts": "tsc",
-    "prepublish": "npm run build-ts",
+    "prepublishOnly": "npm run build-ts",
     "build": "webpack --config webpack.config.js",
     "build-and-start": "webpack --config webpack.config.js && peerjs --port 9000 --key peerjs"
   },
