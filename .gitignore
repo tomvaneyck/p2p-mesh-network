@@ -98,3 +98,5 @@ package-lock.json
 build/scripts
 tsc-build
 coverage
+dist/
+test/scripts/node.js
