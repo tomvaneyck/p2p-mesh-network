@@ -1,6 +1,6 @@
-src/
-test/
-.vscode/
+/src/
+/test/
+/.vscode/
 design.md
 tsconfig.json
 webpack.config.json
