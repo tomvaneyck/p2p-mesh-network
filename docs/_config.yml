@@ -1,0 +1,21 @@
+lsi: false
+safe: true
+source: ../src
+incremental: false
+highlighter: rouge
+
+remote_theme: pmarsceill/just-the-docs
+search: true
+search_tokenizer_separator: /[\s/]+/
+aux_links:
+  "Npm package":
+    - "//npmjs.com/tomvaneyck/p2p-mesh-network"
+heading_anchors: true
+foorter_content: "Copyright &copy; 2019 Tom Van Eyck. Distributed by an <a href=\"https://github.com/pmarsceill/just-the-docs/tree/master/LICENSE.txt\">MIT license.</a>"
+color_scheme: nil
+
+gist:
+  noscript: false
+kramdown:
+  math_engine: mathjax
+  syntax_highlighter: rouge
