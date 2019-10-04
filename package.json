@@ -28,11 +28,10 @@
     "/dist"
   ],
   "scripts": {
-    "build-ts": "tsc",
-    "prepublishOnly": "npm run build-ts",
-    "np": "np",
-    "build": "webpack --config webpack.config.js",
-    "build-and-start": "webpack --config webpack.config.js && peerjs --port 9000 --key peerjs"
+    "build": "rm -r dist && tsc",
+    "prepublishOnly": "npm run build",
+    "test": "rm -r dist && webpack --config webpack.config.js",
+    "test-with-server": "webpack --config webpack.config.js && peerjs --port 9000 --key peerjs"
   },
   "author": "Tom Van Eyck & Wouter De Keersmaecker",
   "license": "MIT"

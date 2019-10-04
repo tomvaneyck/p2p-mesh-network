@@ -10,7 +10,23 @@
 	<script type="text/javascript" src="./scripts/springy.js"></script>
 	<script type="text/javascript" src="./scripts/springyui.js"></script>
 	<script type="text/javascript">
-		let networkNode = new Meshnetwork.Node();
+		let iceServers = [
+				{ urls: ["stun:eu-turn1.xirsys.com"] },
+				{
+					username: "M2bPldrkkK-A2UhnkwWzhujF4UTcEdU0xWdZZswOb4L9UV7JgovgaLjcSlmqqVFoAAAAAF1j5zlwZWxpa2Fhbg==",
+					credential: "98dbe8da-c80a-11e9-815c-169b39aff842",
+					urls: [
+						"turn:eu-turn1.xirsys.com:80?transport=udp",
+						"turn:eu-turn1.xirsys.com:3478?transport=udp",
+						"turn:eu-turn1.xirsys.com:80?transport=tcp",
+						"turn:eu-turn1.xirsys.com:3478?transport=tcp",
+						"turns:eu-turn1.xirsys.com:443?transport=tcp",
+						"turns:eu-turn1.xirsys.com:5349?transport=tcp"
+					]
+				}
+			]
+	
+		let networkNode = new Meshnetwork.Node(iceServers);
 
 		networkNode.onMessageReceived(function (src, data) {
 			let log = document.getElementById("log");
