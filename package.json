@@ -1,0 +1,38 @@
+{
+  "name": "p2p-mesh-network",
+  "version": "0.1.0",
+  "description": "A peer to peer mesh networking module.",
+  "main": "dist/node.js",
+  "types": "dist/node.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tomvaneyck/p2p-mesh-network.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tomvaneyck/p2p-mesh-network/issues"
+  },
+  "homepage": "https://github.com/tomvaneyck/p2p-mesh-network/",
+  "dependencies": {
+    "peerjs": "^1.0.0",
+    "rxjs": "^6.5.1"
+  },
+  "devDependencies": {
+    "np": "^5.1.0",
+    "peer": "^0.2.10",
+    "ts-loader": "^6.2.0",
+    "typescript": "^3.6.3",
+    "webpack": "^4.41.0",
+    "webpack-cli": "^3.3.9"
+  },
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "rm -r dist && tsc",
+    "prepublishOnly": "npm run build",
+    "test": "rm -r dist && webpack --config webpack.config.js",
+    "test-with-server": "webpack --config webpack.config.js && peerjs --port 9000 --key peerjs"
+  },
+  "author": "Tom Van Eyck & Wouter De Keersmaecker",
+  "license": "MIT"
+}
