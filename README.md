@@ -18,4 +18,4 @@ node.sendData("someData")
 
 ## More information
 
-Read the wiki.
+Go to [the documentation](https://tomvaneyck.github.io/p2p-mesh-network) for information about the interface and explanation of some inner workings.
