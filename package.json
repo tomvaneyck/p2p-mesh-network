@@ -17,6 +17,7 @@
     "rxjs": "^6.5.1"
   },
   "devDependencies": {
+    "np": "^5.1.0",
     "peer": "^0.2.10",
     "ts-loader": "^6.2.0",
     "typescript": "^3.6.3",
@@ -29,6 +30,7 @@
   "scripts": {
     "build-ts": "tsc",
     "prepublishOnly": "npm run build-ts",
+    "np": "np",
     "build": "webpack --config webpack.config.js",
     "build-and-start": "webpack --config webpack.config.js && peerjs --port 9000 --key peerjs"
   },

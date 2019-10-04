@@ -1,6 +1,16 @@
 "use strict";
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = require("tslib");
 var rxjs_1 = require("rxjs");
 var event_1 = require("../event");
 var operators_1 = require("rxjs/operators");
@@ -63,7 +73,7 @@ var ConnectionGraph = /** @class */ (function () {
     ConnectionGraph.prototype.setNodeNeighbours = function (address, neighbours) {
         var e_1, _a;
         try {
-            for (var neighbours_1 = tslib_1.__values(neighbours), neighbours_1_1 = neighbours_1.next(); !neighbours_1_1.done; neighbours_1_1 = neighbours_1.next()) {
+            for (var neighbours_1 = __values(neighbours), neighbours_1_1 = neighbours_1.next(); !neighbours_1_1.done; neighbours_1_1 = neighbours_1.next()) {
                 var neighbour = neighbours_1_1.value;
                 this.addNode(neighbour);
             }
@@ -97,7 +107,7 @@ var ConnectionGraph = /** @class */ (function () {
         var visitedNodes = new Set(this.address);
         var candidates = [];
         try {
-            for (var _c = tslib_1.__values(this.connections.get(this.address)), _d = _c.next(); !_d.done; _d = _c.next()) {
+            for (var _c = __values(this.connections.get(this.address)), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var neighbour = _d.value;
                 candidates.push([neighbour, root]);
             }
@@ -125,7 +135,7 @@ var ConnectionGraph = /** @class */ (function () {
                 parentTreeNode.children.push(currentTreeNode);
                 try {
                     // Add all neighbours of this node to the candidates.
-                    for (var _e = (e_3 = void 0, tslib_1.__values(this.connections.get(currentNode))), _f = _e.next(); !_f.done; _f = _e.next()) {
+                    for (var _e = (e_3 = void 0, __values(this.connections.get(currentNode))), _f = _e.next(); !_f.done; _f = _e.next()) {
                         var neighbour = _f.value;
                         candidates.push([neighbour, currentTreeNode]);
                     }
@@ -148,7 +158,7 @@ var ConnectionGraph = /** @class */ (function () {
             distance: distance
         };
         try {
-            for (var _b = tslib_1.__values(currentNode.children), _c = _b.next(); !_c.done; _c = _b.next()) {
+            for (var _b = __values(currentNode.children), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var treeNode = _c.value;
                 this.addToRoutingTable(nextHop, treeNode, distance + 1, routingTable);
             }
@@ -166,7 +176,7 @@ var ConnectionGraph = /** @class */ (function () {
         var root = this.constructRoutingTree();
         var routingTable = {};
         try {
-            for (var _b = tslib_1.__values(root.children), _c = _b.next(); !_c.done; _c = _b.next()) {
+            for (var _b = __values(root.children), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var treeNode = _c.value;
                 this.addToRoutingTable(treeNode.address, treeNode, 1, routingTable);
             }

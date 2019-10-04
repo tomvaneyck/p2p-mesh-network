@@ -1,6 +1,29 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = require("tslib");
 var rxjs_1 = require("rxjs");
 var message_1 = require("./message");
 var event_1 = require("./event");
@@ -198,7 +221,7 @@ var MessageBuffer = /** @class */ (function () {
     return MessageBuffer;
 }());
 var SendMessageBuffer = /** @class */ (function (_super) {
-    tslib_1.__extends(SendMessageBuffer, _super);
+    __extends(SendMessageBuffer, _super);
     function SendMessageBuffer() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.maxMessageIndex = 1000;
@@ -228,7 +251,7 @@ var SendMessageBuffer = /** @class */ (function (_super) {
         }
         else {
             try {
-                for (var _b = tslib_1.__values(this.ackReceived), _c = _b.next(); !_c.done; _c = _b.next()) {
+                for (var _b = __values(this.ackReceived), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var ack = _c.value;
                     if (!ack) {
                         return false;

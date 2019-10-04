@@ -6,7 +6,6 @@
     "downlevelIteration": true,
     "outDir": "./dist/",                        /* Redirect output structure to the directory. */
     "rootDir": "./src",                       /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
-    "importHelpers": true,                 /* Import emit helpers from 'tslib'. */
     "declaration": true,
 
     /* Strict Type-Checking Options */
