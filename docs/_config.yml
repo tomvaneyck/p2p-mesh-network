@@ -21,14 +21,13 @@ url: "https://tomvaneyck.github.io" # the base hostname & protocol for your site
 # github_username:  tomvaneyck
 
 # Build settings
-source: contents
 search: true
 search_tokenizer_separator: /[\s/]+/
 aux_links:
   "Repository":
     - //github.com/tomvaneyck/p2p-mesh-network
   "Npm package":
-    - "//npmjs.com/tomvaneyck/p2p-mesh-network"
+    - "//npmjs.com/package/p2p-mesh-network"
 heading_anchors: true
 footer_content: "Copyright &copy; 2019 Tom Van Eyck. Distributed by an <a href=\"https://github.com/pmarsceill/just-the-docs/tree/master/LICENSE.txt\">MIT license.</a>"
 color_scheme: nil
