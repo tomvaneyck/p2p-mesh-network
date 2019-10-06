@@ -1,7 +1,4 @@
 ---
-# Feel free to add content and custom Front Matter to this file.
-# To modify the layout, see https://jekyllrb.com/docs/themes/#overriding-theme-defaults
-
 layout: home
 title: Home
 nav_order: 1
@@ -24,3 +21,9 @@ let node = new Node();
 node.connectToPeer("address of other node");
 node.sendData("someData")
 ```
+
+## How does it work?
+
+The network exists of different nodes, connected via a peer to peer connection. When you want to connect a new node to the network, a request is done to a public server with the id of an existing node on the network. The server then returns with the ip address which the new node can use to connect to the network.
+
+More detailed information can be found [here](inner_workings.md)
