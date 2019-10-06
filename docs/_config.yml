@@ -17,8 +17,8 @@ title: p2p-mesh-network
 email: tom.vaneyck@telenet.be
 description: >- # this means to ignore newlines until "baseurl:"
   
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "/p2p-mesh-network" # the subpath of your site, e.g. /blog
+url: "https://tomvaneyck.github.com" # the base hostname & protocol for your site, e.g. http://example.com
 github_username:  tomvaneyck
 
 # Build settings
