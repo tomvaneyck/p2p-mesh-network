@@ -100,3 +100,9 @@ tsc-build
 coverage
 dist/
 test/scripts/node.js
+
+# Jekyll
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
