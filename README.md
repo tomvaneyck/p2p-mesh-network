@@ -7,6 +7,7 @@ Perfect for ditributed applications where nodes can appear or disappear without 
 ## Quick start
 
 Import this library in your project, make a new node and connect to others to establish a network. Then just send any data you like.
+[Find the npm package here.](https://www.npmjs.com/package/p2p-mesh-network)
 
 ``` typescript
 import { Node } from "p2p-mesh-network";
