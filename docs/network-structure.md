@@ -72,64 +72,39 @@ Instead of using ip addresses, a node generates an address in the form of a univ
 
 Access control of new nodes to the network is handled in this layer.
 
-Messages are routed over the network via a Link-state routing protocol.
+Messages are routed over the network via a link-state routing protocol.
 
 ## Deeper look
 
-### Storage
+### Messaging
 
-Connections are stored in a dictionary. The uuid of the peer on the other side of the connection should be used as index. The connection object is stored as the connection object itself.
+There are two ways to send messages on the network: unicast and broadcast. These work in the same way as in tcp/ip.
 
-## Messaging
+Apart from these two types of communication, housekeeping is done behind the scenes to keep the stability of the network. These message types exist to achieve this goal. Their specific use will be explained in detail later.
 
-### Message types
+<dl>
+    <dt>acknowledgement</dt>
+    <dd>Used to deliver reliable message delivery.</dd>
+    <dt>connectionAccepted</dt>
+    <dd>Sent to a node that is trying to connect to the network. Means that the node can accept the connection as final.</dd>
+    <dt>connectionRejected</dt>
+    <dd>Sent to a node that is trying to connect to the network. Means that the node should disconnect the current connection and should connect to the address contained in this message.</dd>
+    <dt>entryPointRequest</dt>
+    <dd>Emitted byt a node that gets an incoming connection request if there are no connection slots available anymore.</dd>
+    <dt>entryPoint</dt>
+    <dd>Sent on receival of *entryPointRequest* by a node that has available connection slots.</dd>
+    <dt>networkState</dt>
+    <dd>Sent by any node of which the connection state to any neighbouring node has changed. Used by the link-state routing protocol.</dd>
+    <dt>networkStateRequest</dt>
+    <dd>Sent by any node that beleives its network model is out of date.</dd>
+</dl>
 
-- network_state
-- network_state_request
-- msg
-- msg_broadcast
-- new_edge
-- destroy_edge
+### Connecting to the network
 
-### Multicast / Unicast
+Because of the way *PeerJS* works, a node that wishes to make a new connection to another node has to consider the inital connection temporary. The node on the receiving end may, as it wishes, deny the connection if it does not have enough connection slots available. Nevertheless, the receiving node has to deliver a valid address from a node on the same network to which the initiating node **can** connect.
 
-- Ordering? => buffer
-- Reliability? => buffer
-- Routing?
-- Duplicating? => buffer + expected index (overflow, index >> buffer size)
-- Flooding / Congestion? => buffer
+A valid address is found by requesting it on the network using an *entryPointRequest*. This message is flooded on the network and any node with available connection slots should answer with an *entryPoint* message containing its address.
 
-Buffer size: 10.
-Max index: 10 000.
+### Link-state routing protocol
 
-#### Message contents
-
-A message consists of 3 parts: a unique identifier, a header and a body. The contents of these can change per message type. We now describe the standard contents:
-
-1. **The uid** consists of the universally unique identifier of the node, as well as a consecutive index, wich increases with every message.
-2. **The header** contains the message type and the target peer (optional).
-3. **The body** is the part of the message where the transmitted information resides.
-
-#### Buffer
-
-The sender has a queue of packages that need to be sent, indexed by order. It loads \<buffer-size> amount of packages in the buffer associated with the target peer.
-
-The sender then sends all packages to a neighbouring node. This node puts the messages in a forwarding buffer and then forwards them to the next node. When the target peer receives a message, it puts the message in a buffer at the right index (`messageIndex % bufferSize`). It sends an acknowledgement when all messages with a lower index than the received index have been obtained.
-
-When an acknowledgement has not been received by the sender before the waiting time has expired the message(s) in question will be sent again.
-
-When acknowledgement has been received for the whole buffer, it is emptied and filled again with messages in the queue, keeping the order. With the whole buffer full for the receiver, it sends an acknowledgement to the sender, empties the buffer while giving the data to the application and increments the expected index.
-
-#### MessageQueues
-
-There are two message queues: one for inbound and one for outbound traffic. These queues are meant to interface with the application that uses this network.
-
-Once messages are in the *receive queue* it should be impossible for the network to get access to those messages. Any special message handling should thus be done before sending it to the application.
-
-#### Message sending
-
-Specified interval? When pushed to queue?
-
-#### Acknowledgements
-
-Acknowledgments have a uid with message index equal to -1. The uuid of the source node is still used as normal.
+The network uses a simple implementation of the link-state routing protocol. It uses the *networkState* and *networkSateRequest* messages to distribute network topography.

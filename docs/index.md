@@ -26,4 +26,4 @@ node.sendData("someData")
 
 The network exists of different nodes, connected via a peer to peer connection. When you want to connect a new node to the network, a request is done to a public server with the id of an existing node on the network. The server then returns with the ip address which the new node can use to connect to the network.
 
-More detailed information can be found [here](inner_workings.md)
+More detailed information can be found [here](network-structure.md)
