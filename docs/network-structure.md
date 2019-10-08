@@ -92,7 +92,7 @@ Apart from these two types of communication, housekeeping is done behind the sce
     <dt>entryPointRequest</dt>
     <dd>Emitted byt a node that gets an incoming connection request if there are no connection slots available anymore.</dd>
     <dt>entryPoint</dt>
-    <dd>Sent on receival of *entryPointRequest* by a node that has available connection slots.</dd>
+    <dd>Sent on receival of <i>entryPointRequest</i> by a node that has available connection slots.</dd>
     <dt>networkState</dt>
     <dd>Sent by any node of which the connection state to any neighbouring node has changed. Used by the link-state routing protocol.</dd>
     <dt>networkStateRequest</dt>
