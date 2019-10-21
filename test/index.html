@@ -7,49 +7,221 @@
 	</script> -->
 	<script type="text/javascript" src="./scripts/node.js"></script>
 	<script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
-	<script type="text/javascript" src="./scripts/springy.js"></script>
-	<script type="text/javascript" src="./scripts/springyui.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.11.0/dist/cytoscape.min.js"
+		integrity="sha256-yxwHL+45dAVKOfu7vLHmm8LQFTe+hnw+BRQxgbzdd64=" crossorigin="anonymous"></script>
+	<script src="https://unpkg.com/webcola/WebCola/cola.min.js"></script>
+	<script src="./scripts/cytoscape-cola.js"></script>
 	<script type="text/javascript">
 		let iceServers = [
-				{ urls: ["stun:eu-turn1.xirsys.com"] },
-				{
-					username: "M2bPldrkkK-A2UhnkwWzhujF4UTcEdU0xWdZZswOb4L9UV7JgovgaLjcSlmqqVFoAAAAAF1j5zlwZWxpa2Fhbg==",
-					credential: "98dbe8da-c80a-11e9-815c-169b39aff842",
-					urls: [
-						"turn:eu-turn1.xirsys.com:80?transport=udp",
-						"turn:eu-turn1.xirsys.com:3478?transport=udp",
-						"turn:eu-turn1.xirsys.com:80?transport=tcp",
-						"turn:eu-turn1.xirsys.com:3478?transport=tcp",
-						"turns:eu-turn1.xirsys.com:443?transport=tcp",
-						"turns:eu-turn1.xirsys.com:5349?transport=tcp"
-					]
-				}
-			]
-	
-		let networkNode = new Meshnetwork.Node(iceServers);
+			{ urls: ["stun:eu-turn1.xirsys.com"] },
+			{
+				username: "M2bPldrkkK-A2UhnkwWzhujF4UTcEdU0xWdZZswOb4L9UV7JgovgaLjcSlmqqVFoAAAAAF1j5zlwZWxpa2Fhbg==",
+				credential: "98dbe8da-c80a-11e9-815c-169b39aff842",
+				urls: [
+					"turn:eu-turn1.xirsys.com:80?transport=udp",
+					"turn:eu-turn1.xirsys.com:3478?transport=udp",
+					"turn:eu-turn1.xirsys.com:80?transport=tcp",
+					"turn:eu-turn1.xirsys.com:3478?transport=tcp",
+					"turns:eu-turn1.xirsys.com:443?transport=tcp",
+					"turns:eu-turn1.xirsys.com:5349?transport=tcp"
+				]
+			}
+		];
+		let networkNode;
+		let cy;
+		let layoutCose = {
+			name: 'cose',
 
-		networkNode.onMessageReceived(function (src, data) {
-			let log = document.getElementById("log");
-			log.value = log.value + src + " sent " + data + "\n";
-			log.scrollTop = log.scrollHeight;
-		});
+			// Called on `layoutready`
+			ready: function () { },
 
-		networkNode.onConnectedToPeer(function(user) {
-			let otherAddress = document.getElementById("otherAddress");
-			otherAddress.innerText = user;
-			otherAddress.style.color = intToRGB(hashCode(user));
-			console.log("A connection was made to peer", user);
-		});
-		networkNode.onDisconnectedFromNetwork(function() {
-			document.getElementById("localAddress").innerText = "";
-			document.getElementById("otherAddress").innerText = "";
-			console.log("Disconnected from network.");
-		});
-		networkNode.onConnectedToNetwork(function(localNodeId) {
-			let localAddress = document.getElementById("localAddress");
-			localAddress.innerText = localNodeId;
-			localAddress.style.color = intToRGB(hashCode(localNodeId));
-			console.log("Connected to network with id:", localNodeId);
+			// Called on `layoutstop`
+			stop: function () { },
+
+			// Whether to animate while running the layout
+			// true : Animate continuously as the layout is running
+			// false : Just show the end result
+			// 'end' : Animate with the end result, from the initial positions to the end positions
+			animate: "end",
+
+			// Easing of the animation for animate:'end'
+			animationEasing: undefined,
+
+			// The duration of the animation for animate:'end'
+			animationDuration: undefined,
+
+			// A function that determines whether the node should be animated
+			// All nodes animated by default on animate enabled
+			// Non-animated nodes are positioned immediately when the layout starts
+			animateFilter: function (node, i) { return true; },
+
+
+			// The layout animates only after this many milliseconds for animate:true
+			// (prevents flashing on fast runs)
+			animationThreshold: 250,
+
+			// Number of iterations between consecutive screen positions update
+			refresh: 20,
+
+			// Whether to fit the network view after when done
+			fit: true,
+
+			// Padding on fit
+			padding: 30,
+
+			// Constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
+			boundingBox: undefined,
+
+			// Excludes the label when calculating node bounding boxes for the layout algorithm
+			nodeDimensionsIncludeLabels: false,
+
+			// Randomize the initial positions of the nodes (true) or use existing positions (false)
+			randomize: false,
+
+			// Extra spacing between components in non-compound graphs
+			componentSpacing: 40,
+
+			// Node repulsion (non overlapping) multiplier
+			nodeRepulsion: function (node) { return 2048; },
+
+			// Node repulsion (overlapping) multiplier
+			nodeOverlap: 4,
+
+			// Ideal edge (non nested) length
+			idealEdgeLength: function (edge) { return 32; },
+
+			// Divisor to compute edge forces
+			edgeElasticity: function (edge) { return 32; },
+
+			// Nesting factor (multiplier) to compute ideal edge length for nested edges
+			nestingFactor: 1.2,
+
+			// Gravity force (constant)
+			gravity: 1,
+
+			// Maximum number of iterations to perform
+			numIter: 1000,
+
+			// Initial temperature (maximum node displacement)
+			initialTemp: 1000,
+
+			// Cooling factor (how the temperature is reduced between consecutive iterations
+			coolingFactor: 0.99,
+
+			// Lower temperature threshold (below this point the layout will end)
+			minTemp: 1.0
+		};
+		let layoutCola = {
+			name: "cola",
+			animate: false, // whether to show the layout as it's running
+			refresh: 1, // number of ticks per frame; higher is faster but more jerky
+			maxSimulationTime: 4000, // max length in ms to run the layout
+			ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
+			fit: true, // on every layout reposition of nodes, fit the viewport
+			padding: 30, // padding around the simulation
+			boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
+			nodeDimensionsIncludeLabels: false, // whether labels should be included in determining the space used by a node
+
+			// layout event callbacks
+			ready: function () { }, // on layoutready
+			stop: function () { }, // on layoutstop
+
+			// positioning options
+			randomize: false, // use random node positions at beginning of layout
+			avoidOverlap: true, // if true, prevents overlap of node bounding boxes
+			handleDisconnected: true, // if true, avoids disconnected components from overlapping
+			convergenceThreshold: 0.01, // when the alpha value (system energy) falls below this value, the layout stops
+			nodeSpacing: function (node) { return 10; }, // extra spacing around nodes
+			flow: undefined, // use DAG/tree flow layout if specified, e.g. { axis: 'y', minSeparation: 30 }
+			alignment: undefined, // relative alignment constraints on nodes, e.g. function( node ){ return { x: 0, y: 1 } }
+			gapInequalities: undefined, // list of inequality constraints for the gap between the nodes, e.g. [{"axis":"y", "left":node1, "right":node2, "gap":25}]
+
+			// different methods of specifying edge length
+			// each can be a constant numerical value or a function like `function( edge ){ return 2; }`
+			edgeLength: undefined, // sets edge length directly in simulation
+			edgeSymDiffLength: undefined, // symmetric diff edge length in simulation
+			edgeJaccardLength: undefined, // jaccard edge length in simulation
+
+			// iterations of cola algorithm; uses default values on undefined
+			unconstrIter: undefined, // unconstrained initial layout iterations
+			userConstIter: undefined, // initial layout iterations with user-specified constraints
+			allConstIter: undefined, // initial layout iterations with all constraints including non-overlap
+
+			// infinite layout options
+			infinite: false // overrides all other options for a forces-all-the-time mode
+		}
+
+		document.addEventListener("DOMContentLoaded", function (event) {
+			networkNode = new Meshnetwork.Node(iceServers);
+			cy = cytoscape({
+				container: document.getElementById('network-graph'), // container to render in
+				elements: [
+					{
+						data: {
+							id: networkNode.address,
+							color: "#" + intToRGB(hashCode(networkNode.address))
+						}
+					}
+				],
+				style: [ // the stylesheet for the graph
+					{
+						selector: 'node',
+						style: {
+							'shape': 'round-rectangle',
+							'background-opacity': 0,
+							'border-opacity': 0,
+							'label': 'data(id)',
+							'color': 'data(color)',
+							'font-size': 4,
+							'width': 'label',
+							'height': 'label',
+							'text-valign': 'center',
+							'text-halign': 'center',
+						}
+					},
+					{
+						selector: 'edge',
+						style: {
+							'width': 3,
+							'line-color': '#ccc',
+							'target-arrow-color': '#ccc',
+							'curve-style': 'straight',
+							// 'haystack-radius': 0.5,
+							'width': 0.5,
+							'source-endpoint': 'outside-to-node',
+							'target-endpoint': 'outside-to-node',
+							'target-arrow-shape': 'vee',
+							'arrow-scale': 0.3
+						}
+					}
+				],
+				layout: layoutCola
+			});
+
+			networkNode.onMessageReceived(function (src, data) {
+				let log = document.getElementById("log");
+				log.value = log.value + src + " sent " + data + "\n";
+				log.scrollTop = log.scrollHeight;
+			});
+
+			networkNode.onConnectedToPeer(function(user) {
+				let otherAddress = document.getElementById("otherAddress");
+				otherAddress.innerText = user;
+				otherAddress.style.color = intToRGB(hashCode(user));
+				console.log("A connection was made to peer", user);
+			});
+			networkNode.onDisconnectedFromNetwork(function() {
+				document.getElementById("localAddress").innerText = "";
+				document.getElementById("otherAddress").innerText = "";
+				console.log("Disconnected from network.");
+			});
+			networkNode.onConnectedToNetwork(function(localNodeId) {
+				let localAddress = document.getElementById("localAddress");
+				localAddress.innerText = localNodeId;
+				localAddress.style.color = intToRGB(hashCode(localNodeId));
+				console.log("Connected to network with id:", localNodeId);
+			});
+			networkNode.onNetworkChange(refreshNetworkData);
 		});
 
 		function onConnectButtonClicked() {
@@ -72,23 +244,50 @@
 			textArea.remove();
 		}
 
-		let graph = new Springy.Graph();
+		function refreshNetworkData() {
+			let neighbours = networkNode.neighbours;
 
-		// Graph visualisation.
-		networkNode.onNetworkChange(function() {
-			springy.clear();
-			let nodes = new Map();
-
-			for (let node of networkNode.networkTopography.keys()) {
-				nodes.set(node, graph.newNode({ label: node, color: ("#" + intToRGB(hashCode(node))) }));
+			document.getElementById("numberOfConnections").innerText = neighbours.length;
+			let log = document.getElementById("neighbours");
+			log.value = "";
+			for (let neighbour of neighbours) {
+				log.value += neighbour + "\n";
 			}
+
+			// Graph visualisation
+			cy.elements().remove();
+			let elements = Array.from(networkNode.networkTopography.keys()).map((value, index, array) => {
+				return {
+					group: "nodes",
+					data: {
+						id: value,
+						color: "#" + intToRGB(hashCode(value))
+					},
+					grabbable: true,
+					pannable: false
+				}
+			});
 
 			for (let edges of networkNode.networkTopography.entries()) {
+				let source = edges[0];
+
 				for (let node of edges[1].values()) {
-					graph.newEdge(nodes.get(edges[0]), nodes.get(node));
+					let target = node;
+					let edge = {
+						group: "edges",
+						data: {
+							id: edges[0] + node,
+							source: source,
+							target: target
+						}
+					};
+					elements.push(edge);
 				}
 			}
-		});
+
+			cy.add(elements);
+			cy.layout(layoutCola).run();
+		}
 
 		function hashCode(str) { // java String#hashCode
 			var hash = 0;
@@ -142,33 +341,25 @@
 			<p>Connected to peer: <b id="otherAddress"></b></p>
 			<p>
 				Peer ID: <input type="text" id="peerIdTextInput">
-				<input type="submit" value="Connect" onclick="onConnectButtonClicked()">
+				<button onclick="onConnectButtonClicked()">Connect</button>
 			</p>
 			<p>
 				Send to peer: <input type="text" id="sendToAddress">
 			</p>
 			<p>
 				Message: <input type="text" id="messageInput">
-				<input type="submit" value="Send" onclick="onSendButtonClicked()">
+				<button onclick="onSendButtonClicked()">Send</button>
 			</p>
 			<p><textarea id="log" style="width: 500;height: 300;"></textarea></p>
+			<p>
+				<button onclick="refreshNetworkData()">Refresh network data</button>
+				Number of connections: <span id="numberOfConnections"></span>
+			</p>
+			<p>
+				<textarea id="neighbours" style="width: 500; height: 300;"></textarea>
+			</p>
 		</div>
-		<canvas class="network-graph" width="100%" height="100%">
+		<div id="network-graph" width="100%" height="100%" style="display: block;"></div>
 	</div>
-	<script type="text/javascript">
-		var canvas = document.querySelector('.network-graph');
-		fitToContainer(canvas);
-
-		function fitToContainer(canvas) {
-			// Make it visually fill the positioned parent
-			canvas.style.width = '100%';
-			canvas.style.height = '100%';
-			// ...then set the internal size to match
-			canvas.width = canvas.offsetWidth;
-			canvas.height = canvas.offsetHeight;
-		}
-
-		var springy = $('.network-graph').springy({ graph: graph });
-	</script>
 </body>
 </html>
