@@ -28,7 +28,6 @@ export class NetworkEntity {
     }
     private connectionGraph: ConnectionGraph;
     private routingTable: RoutingTable = {};
-    private farthestUnconnectedNode: string | undefined = undefined;
 
     public get networkTopography() {
         return this.connectionGraph.topography;
@@ -44,7 +43,6 @@ export class NetworkEntity {
             this.events.next(event);
             if (event.type == MeshEventType.networkChange) {
                 this.routingTable = this.connectionGraph.makeRoutingTable();
-                this.findFarthestUnconnectedNode();
                 this.balanceNetwork();
             }
         });
@@ -340,7 +338,7 @@ export class NetworkEntity {
         }
     }
 
-    private findFarthestUnconnectedNode() {
+    private findFarthestUnconnectedNode(): string | undefined {
         let farthestNode: string | undefined;
         let distance: number = 0;
 
@@ -350,16 +348,17 @@ export class NetworkEntity {
             }
         }
 
-        this.farthestUnconnectedNode = farthestNode;
+        return farthestNode;
     }
     
     private balanceNetwork(): void {
-        if (this.farthestUnconnectedNode
-            && this.numberOfConnections < this.minimumNumberhOfConnections
+        if (this.numberOfConnections < this.minimumNumberhOfConnections
             && this.numberOfConnections < this.connectionGraph.numberOfNodes - 1) {
-            this.connectToPeer(this.farthestUnconnectedNode);
-            // Renewing farthest node because of previous connect.
-            this.findFarthestUnconnectedNode();
+
+            let farthestUnconnectedNode = this.findFarthestUnconnectedNode();
+            if (farthestUnconnectedNode) {
+                this.connectToPeer(farthestUnconnectedNode);
+            }
         }
     }
 }
