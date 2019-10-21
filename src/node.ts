@@ -12,6 +12,7 @@ export {
 interface MeshNetwork {
     readonly address: string,
     readonly networkTopography: Map<string, Set<string>>,
+    readonly neighbours: string[];
 
     onMessageReceived(callback: (source: string, msg: any) => void): void,
     onConnectedToNetwork(callback: (address: string) => void): void;
@@ -73,6 +74,9 @@ class Node implements MeshNetwork {
         return this.networkEntitity.networkTopography;
     }
 
+    public get neighbours() {
+        return this.networkEntitity.neighbours;
+    }
     constructor(iceServers?: IceServer[]) {
         this.networkEntitity = new NetworkEntity(this.address, iceServers);
         this.transportEntity = new TransportEntity(

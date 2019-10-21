@@ -33,6 +33,9 @@ export class NetworkEntity {
     public get networkTopography() {
         return this.connectionGraph.topography;
     }
+    public get neighbours(): string[] {
+        return Object.keys(this.connections);
+    }
 
     constructor(address: string, iceServers?: IceServer[]) {
         this.address = address;
