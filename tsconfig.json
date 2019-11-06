@@ -7,6 +7,13 @@
     "outDir": "./dist/",                        /* Redirect output structure to the directory. */
     "rootDir": "./src",                       /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
     "declaration": true,
+    "lib": [
+      "dom",
+      "es6",
+      "dom.iterable",
+      "scripthost",
+      "es2019"
+    ],
 
     /* Strict Type-Checking Options */
     "strict": true,                           /* Enable all strict type-checking options. */

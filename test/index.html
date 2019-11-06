@@ -113,7 +113,7 @@
 		};
 		let layoutCola = {
 			name: "cola",
-			animate: false, // whether to show the layout as it's running
+			animate: true, // whether to show the layout as it's running
 			refresh: 1, // number of ticks per frame; higher is faster but more jerky
 			maxSimulationTime: 4000, // max length in ms to run the layout
 			ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
@@ -244,7 +244,8 @@
 			textArea.remove();
 		}
 
-		function refreshNetworkData(event) {
+		function refreshNetworkData(event = null) {
+			// List neighbours.
 			let neighbours = networkNode.neighbours;
 
 			document.getElementById("numberOfConnections").innerText = neighbours.length;
@@ -254,38 +255,77 @@
 				log.value += neighbour + "\n";
 			}
 
-			// Graph visualisation
-			cy.elements().remove();
-			let elements = Array.from(networkNode.networkTopography.keys()).map((value, index, array) => {
-				return {
-					group: "nodes",
-					data: {
-						id: value,
-						color: "#" + intToRGB(hashCode(value))
-					},
-					grabbable: true,
-					pannable: false
-				}
-			});
-
-			for (let edges of networkNode.networkTopography.entries()) {
-				let source = edges[0];
-
-				for (let node of edges[1].values()) {
-					let target = node;
-					let edge = {
-						group: "edges",
+			// Graph visualisation.
+			if (!event) {
+				cy.elements().remove();
+				let elements = Array.from(networkNode.networkTopography.keys()).map((value, index, _) => {
+					return {
+						group: "nodes",
 						data: {
-							id: edges[0] + node,
-							source: source,
-							target: target
-						}
-					};
-					elements.push(edge);
+							id: value,
+							color: "#" + intToRGB(hashCode(value))
+						},
+						grabbable: true,
+						pannable: false
+					}
+				});
+
+				for (let edges of networkNode.networkTopography.entries()) {
+					let source = edges[0];
+
+					for (let target of edges[1].values()) {
+						let edge = {
+							group: "edges",
+							data: {
+								id: source + target,
+								source: source,
+								target: target
+							}
+						};
+						elements.push(edge);
+					}
+				}
+
+				cy.add(elements);
+			} else {
+				let eventData = event.metadata;
+				if (eventData.added) {
+					for (let node of eventData.added) {
+						cy.add({
+							group: "nodes",
+							data: {
+								id: node,
+								color: "#" + intToRGB(hashCode(node))
+							},
+							grabbable: true,
+							pannable: false
+						});
+					}
+				}
+				if (eventData.removed) {
+					for (let node of eventData.removed) {
+						cy.remove("node[id = '" + node + "'']");
+					}
+				}
+				if (eventData.connected) {
+					for (let edge of eventData.connected) {
+						cy.add({
+							group: "edges",
+							data: {
+								id: edge[0] + edge[1],
+								source: edge[0],
+								target: edge[1]
+							}
+						});
+					}
+				}
+				if (eventData.disConnected) {
+					for (let edge of eventData.disConnected) {
+						cy.remove("edge[id = '" + edge[0] + edge[1] + "']");
+					}
 				}
 			}
 
-			cy.add(elements);
 			cy.layout(layoutCola).run();
 		}
 

@@ -1,16 +1,12 @@
 import { Subject } from 'rxjs';
 import { MeshEventType, NetworkChangeMeshEvent, NetworkChangeEventData } from '../event';
-import { debounceTime } from 'rxjs/operators';
 
 export class ConnectionGraph {
     private address: string;
 
-    private _events = new Subject<NetworkChangeMeshEvent>();
-    public get events() {
-        return this._events.pipe(debounceTime(1000));
-    }
+    public events = new Subject<NetworkChangeMeshEvent>();
     private notifyChange(data: NetworkChangeEventData) {
-        this._events.next({
+        this.events.next({
             type: MeshEventType.networkChange,
             message: "The network topography changed.",
             metadata: data
@@ -78,27 +74,39 @@ export class ConnectionGraph {
      * @param neighbours The neighbours of the node
      */
     public setNodeNeighbours(address: string, neighbours: string[]) {
-        // Calculate which nodes disconnected from address.
-        let disconnectedNodes: string[] = [];
+        // Calculate the newly connected nodes.
+        let connectedNeighbours: string[] = neighbours;
         if (this.connections.has(address)) {
-            disconnectedNodes = [...this.connections.get(address)!]
+            connectedNeighbours = connectedNeighbours
+                .filter(neighbour => !this.connections.get(address)!.has(neighbour));
+        }
+        
+        // Calculate which nodes disconnected from address.
+        let disconnectedNeighbours: string[] = [];
+        if (this.connections.has(address)) {
+            disconnectedNeighbours = [...this.connections.get(address)!]
                 .filter(neighbour => !neighbours.includes(neighbour));
         }
+        
+        this.notifyChange({
+            disConnected: disconnectedNeighbours
+                .flatMap((node: string, _, __) => [[address, node], [node, address]])
+        });
 
+        // Add all neighbours as nodes on the graph and connect.
         for (let neighbour of neighbours) {
-            // Add all neighbours as nodes.
             this.addNode(neighbour);
         }
         this.connections.set(address, new Set(neighbours));
 
         // For nodes that disconnected from address, delete if unreachable.
-        for (let disconnectedNode of disconnectedNodes) {
+        for (let disconnectedNode of disconnectedNeighbours) {
             this.removeNodeIfUnreachable(disconnectedNode);
         }
         
         // Notify the application with the new neighbours.
         let connections: [string, string][] = [];
-        for (let neighbour of neighbours) {
+        for (let neighbour of connectedNeighbours) {
             connections.push([address, neighbour]);
         }
         this.notifyChange({

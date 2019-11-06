@@ -13,6 +13,7 @@
   },
   "homepage": "https://github.com/tomvaneyck/p2p-mesh-network/",
   "dependencies": {
+    "@types/node": "^12.12.6",
     "peerjs": "^1.0.0",
     "rxjs": "^6.5.1"
   },
