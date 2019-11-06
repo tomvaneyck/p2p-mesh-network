@@ -2,7 +2,7 @@ import { TransportEntity } from './transport';
 import { Subject } from 'rxjs';
 import { Message, MessageType } from './message';
 import { NetworkEntity, IceServer } from './network/network';
-import { MeshEventType, MeshEvent } from './event';
+import { MeshEventType, MeshEvent, NetworkChangeMeshEvent } from './event';
 
 export {
     Node,
@@ -60,10 +60,10 @@ class Node implements MeshNetwork {
             callback(address);
         });
     }
-    private networkChange = new Subject<undefined>();
-    public onNetworkChange(callback: () => void) {
-        this.networkChange.subscribe(() => {
-            callback();
+    private networkChange = new Subject<NetworkChangeMeshEvent>();
+    public onNetworkChange(callback: (event: NetworkChangeMeshEvent) => void) {
+        this.networkChange.subscribe((event: NetworkChangeMeshEvent) => {
+            callback(event);
         });
     }
 
@@ -116,7 +116,7 @@ class Node implements MeshNetwork {
                     this.connectionToNetwork.next(false);
                     break;
                 case MeshEventType.networkChange:
-                    this.networkChange.next();
+                    this.networkChange.next(event as NetworkChangeMeshEvent);
                     break;
                 default:
                     console.log(event.message, event);
