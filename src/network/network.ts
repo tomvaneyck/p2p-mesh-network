@@ -176,7 +176,6 @@ export class NetworkEntity {
         this.connectionGraph.addConnection(this.address, connection.peer);
 
         this.sendNewNetworkState();
-        this.sendNetworkStateRequest();
 
         console.log("Connection established between peers.");
         console.log("   this peer: ", this.address);
@@ -200,17 +199,17 @@ export class NetworkEntity {
         this.sendMessage(networkState);
     }
 
-    private sendNetworkStateRequest() {
-        let networkStateRequest: NetworkStateRequest = {
-            header: {
-                type: MessageType.networkStateRequest,
-                sourceAddress: this.address,
-                index: this.messsageIndex
-            }
-        };
+    // private sendNetworkStateRequest() {
+    //     let networkStateRequest: NetworkStateRequest = {
+    //         header: {
+    //             type: MessageType.networkStateRequest,
+    //             sourceAddress: this.address,
+    //             index: this.messsageIndex
+    //         }
+    //     };
 
-        this.sendMessage(networkStateRequest);
-    }
+    //     this.sendMessage(networkStateRequest);
+    // }
 
     public sendMessage(message: Message): void {
         switch (message.header.type) {
@@ -334,7 +333,8 @@ export class NetworkEntity {
             callback(message);
             this.messageIndexBuffer[message.header.sourceAddress] = index;
             this.sendMessage(message);
-            console.log("broadcastHandler", message);
+            console.log("broadcastHandler: ", message.header.type, message.header.sourceAddress);
+            console.log(message);
         }
     }
 
