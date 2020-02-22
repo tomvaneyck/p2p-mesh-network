@@ -69,15 +69,15 @@ export interface Acknowledgement extends Message {
 }
 
 export enum MessageType {
-    connectionAccepted,
-    connectionRejected,
-    entryPointRequest,
-    entryPoint,
-    networkState,
-    networkStateRequest,
-    unicast,
-    broadcast,
-    acknowledgement
+    connectionAccepted = "Connection accepted",
+    connectionRejected = "Connection rejected",
+    entryPointRequest = "Entry point request",
+    entryPoint = "Entry point advertisment",
+    networkState = "Network state",
+    networkStateRequest = "Network state request",
+    unicast = "Unicast",
+    broadcast = "Broadcast",
+    acknowledgement = "Acknowledgement"
 }
 
 export interface Message {

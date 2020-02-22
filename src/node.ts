@@ -92,16 +92,16 @@ class Node implements MeshNetwork {
         this.transportEntity.events.subscribe((event: MeshEvent) => {
             switch (event.type) {
                 case MeshEventType.outOfBufferBounds:
-                    console.log("Metadata of incoming error:", event.metadata);
+                    console.warn("Metadata of incoming error:", event.metadata);
                     throw Error(event.message);
                 case MeshEventType.malformedMessage:
-                    console.log("Metadata of incoming error:", event.metadata);
+                    console.warn("Metadata of incoming error:", event.metadata);
                     throw Error(event.message);
                 case MeshEventType.timeOut:
-                    console.log("Metadata of incoming error:", event.metadata);
+                    console.warn("Metadata of incoming error:", event.metadata);
                     throw Error(event.message);
                 default:
-                    console.log(event.message, event);
+                    console.warn(event.message, event);
             }
         });
 
@@ -120,7 +120,7 @@ class Node implements MeshNetwork {
                     this.networkChange.next(event as NetworkChangeMeshEvent);
                     break;
                 default:
-                    console.log(event.message, event);
+                    console.warn(event.message, event);
             }
         });
     }

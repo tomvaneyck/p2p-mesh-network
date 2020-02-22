@@ -152,8 +152,8 @@ export class NetworkEntity {
                     }
                 };
                 this.sendMessage(connectionAccepted)
-                
                 this.handleAcceptedConnection(connection);
+                this.sendNewNetworkState();
             }
             else {
                 // Ask for available entry point. When entry point received, handled by handleNewMessage.
@@ -174,9 +174,6 @@ export class NetworkEntity {
         delete this.temporaryConnections[connection.peer];
 
         this.connectionGraph.addConnection(this.address, connection.peer);
-
-        this.sendNewNetworkState();
-        this.sendNetworkStateRequest();
 
         console.log("Connection established between peers.");
         console.log("   this peer: ", this.address);
@@ -200,17 +197,17 @@ export class NetworkEntity {
         this.sendMessage(networkState);
     }
 
-    private sendNetworkStateRequest() {
-        let networkStateRequest: NetworkStateRequest = {
-            header: {
-                type: MessageType.networkStateRequest,
-                sourceAddress: this.address,
-                index: this.messsageIndex
-            }
-        };
+    // private sendNetworkStateRequest() {
+    //     let networkStateRequest: NetworkStateRequest = {
+    //         header: {
+    //             type: MessageType.networkStateRequest,
+    //             sourceAddress: this.address,
+    //             index: this.messsageIndex
+    //         }
+    //     };
 
-        this.sendMessage(networkStateRequest);
-    }
+    //     this.sendMessage(networkStateRequest);
+    // }
 
     public sendMessage(message: Message): void {
         switch (message.header.type) {
@@ -327,6 +324,10 @@ export class NetworkEntity {
     }
 
     private broadcastHandler(message: Message, callback: (message: Message) => any): void {
+        if (message.header.sourceAddress === this.address) {
+            return;
+        }
+
         let index: number = message.header.index!;
         let bufferedIndex: number = this.messageIndexBuffer[message.header.sourceAddress];
 
@@ -334,7 +335,6 @@ export class NetworkEntity {
             callback(message);
             this.messageIndexBuffer[message.header.sourceAddress] = index;
             this.sendMessage(message);
-            console.log("broadcastHandler", message);
         }
     }
 
