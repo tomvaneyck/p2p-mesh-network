@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/tomvaneyck/p2p-mesh-network/issues"
   },
-  "homepage": "https://github.com/tomvaneyck/p2p-mesh-network/",
+  "homepage": "https://p2pmesh.tomvaneyck.be/",
   "dependencies": {
     "peerjs": "^1.0.0",
     "rxjs": "^6.5.1"
