@@ -1,6 +1,6 @@
 {
   "name": "p2p-mesh-network",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A peer to peer mesh networking module.",
   "main": "dist/node.js",
   "types": "dist/node.d.ts",
