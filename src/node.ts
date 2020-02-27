@@ -10,10 +10,11 @@ export {
 }
 
 interface MeshNetwork {
-    readonly address: string,
-    readonly networkTopography: Map<string, Set<string>>,
+    readonly address: string;
+    readonly networkTopography: Map<string, Set<string>>;
+    readonly neighbours: string[];
 
-    onMessageReceived(callback: (source: string, msg: any) => void): void,
+    onMessageReceived(callback: (source: string, msg: any) => void): void;
     onConnectedToNetwork(callback: (address: string) => void): void;
     onDisconnectedFromNetwork(callback: () => void): void;
     onConnectedToPeer(callback: (address: string) => void): void;
@@ -66,12 +67,16 @@ class Node implements MeshNetwork {
         });
     }
 
-    private transportEntity: TransportEntity;
-    private networkEntitity: NetworkEntity;
-
     public get networkTopography() {
         return this.networkEntitity.networkTopography;
     }
+
+    public get neighbours() {
+        return this.networkEntitity.neighbours;
+    }
+    
+    private transportEntity: TransportEntity;
+    private networkEntitity: NetworkEntity;
 
     constructor(iceServers?: IceServer[]) {
         this.networkEntitity = new NetworkEntity(this.address, iceServers);
@@ -86,16 +91,16 @@ class Node implements MeshNetwork {
         this.transportEntity.events.subscribe((event: MeshEvent) => {
             switch (event.type) {
                 case MeshEventType.outOfBufferBounds:
-                    console.log("Metadata of incoming error:", event.metadata);
+                    console.warn("Metadata of incoming error:", event.metadata);
                     throw Error(event.message);
                 case MeshEventType.malformedMessage:
-                    console.log("Metadata of incoming error:", event.metadata);
+                    console.warn("Metadata of incoming error:", event.metadata);
                     throw Error(event.message);
                 case MeshEventType.timeOut:
-                    console.log("Metadata of incoming error:", event.metadata);
+                    console.warn("Metadata of incoming error:", event.metadata);
                     throw Error(event.message);
                 default:
-                    console.log(event.message, event);
+                    console.warn(event.message, event);
             }
         });
 
@@ -114,7 +119,7 @@ class Node implements MeshNetwork {
                     this.networkChange.next();
                     break;
                 default:
-                    console.log(event.message, event);
+                    console.warn(event.message, event);
             }
         });
     }

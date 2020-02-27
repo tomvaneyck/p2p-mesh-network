@@ -28,10 +28,12 @@ export class NetworkEntity {
     }
     private connectionGraph: ConnectionGraph;
     private routingTable: RoutingTable = {};
-    private farthestUnconnectedNode: string | undefined = undefined;
 
     public get networkTopography() {
         return this.connectionGraph.topography;
+    }
+    public get neighbours(): string[] {
+        return Object.keys(this.connections);
     }
 
     constructor(address: string, iceServers?: IceServer[]) {
@@ -41,7 +43,6 @@ export class NetworkEntity {
             this.events.next(event);
             if (event.type == MeshEventType.networkChange) {
                 this.routingTable = this.connectionGraph.makeRoutingTable();
-                this.findFarthestUnconnectedNode();
                 this.balanceNetwork();
             }
         });
@@ -151,8 +152,8 @@ export class NetworkEntity {
                     }
                 };
                 this.sendMessage(connectionAccepted)
-                
                 this.handleAcceptedConnection(connection);
+                this.sendNewNetworkState();
             }
             else {
                 // Ask for available entry point. When entry point received, handled by handleNewMessage.
@@ -173,9 +174,6 @@ export class NetworkEntity {
         delete this.temporaryConnections[connection.peer];
 
         this.connectionGraph.addConnection(this.address, connection.peer);
-
-        this.sendNewNetworkState();
-        this.sendNetworkStateRequest();
 
         console.log("Connection established between peers.");
         console.log("   this peer: ", this.address);
@@ -199,17 +197,17 @@ export class NetworkEntity {
         this.sendMessage(networkState);
     }
 
-    private sendNetworkStateRequest() {
-        let networkStateRequest: NetworkStateRequest = {
-            header: {
-                type: MessageType.networkStateRequest,
-                sourceAddress: this.address,
-                index: this.messsageIndex
-            }
-        };
+    // private sendNetworkStateRequest() {
+    //     let networkStateRequest: NetworkStateRequest = {
+    //         header: {
+    //             type: MessageType.networkStateRequest,
+    //             sourceAddress: this.address,
+    //             index: this.messsageIndex
+    //         }
+    //     };
 
-        this.sendMessage(networkStateRequest);
-    }
+    //     this.sendMessage(networkStateRequest);
+    // }
 
     public sendMessage(message: Message): void {
         switch (message.header.type) {
@@ -326,6 +324,10 @@ export class NetworkEntity {
     }
 
     private broadcastHandler(message: Message, callback: (message: Message) => any): void {
+        if (message.header.sourceAddress === this.address) {
+            return;
+        }
+
         let index: number = message.header.index!;
         let bufferedIndex: number = this.messageIndexBuffer[message.header.sourceAddress];
 
@@ -333,11 +335,10 @@ export class NetworkEntity {
             callback(message);
             this.messageIndexBuffer[message.header.sourceAddress] = index;
             this.sendMessage(message);
-            console.log("broadcastHandler", message);
         }
     }
 
-    private findFarthestUnconnectedNode() {
+    private findFarthestUnconnectedNode(): string | undefined {
         let farthestNode: string | undefined;
         let distance: number = 0;
 
@@ -347,16 +348,17 @@ export class NetworkEntity {
             }
         }
 
-        this.farthestUnconnectedNode = farthestNode;
+        return farthestNode;
     }
     
     private balanceNetwork(): void {
-        if (this.farthestUnconnectedNode
-            && this.numberOfConnections < this.minimumNumberhOfConnections
+        if (this.numberOfConnections < this.minimumNumberhOfConnections
             && this.numberOfConnections < this.connectionGraph.numberOfNodes - 1) {
-            this.connectToPeer(this.farthestUnconnectedNode);
-            // Renewing farthest node because of previous connect.
-            this.findFarthestUnconnectedNode();
+
+            let farthestUnconnectedNode = this.findFarthestUnconnectedNode();
+            if (farthestUnconnectedNode) {
+                this.connectToPeer(farthestUnconnectedNode);
+            }
         }
     }
 }

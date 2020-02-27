@@ -81,7 +81,8 @@ export class ConnectionGraph {
         };
 
         // Add the neighbours of this node to the candidates. 
-        let visitedNodes: Set<string> = new Set(this.address);
+        let visitedNodes: Set<string> = new Set();
+        visitedNodes.add(this.address);
         let candidates: [string, RoutingTreeNode][] = [];
         for (let neighbour of this.connections.get(this.address)!) {
             candidates.push([neighbour, root]);
