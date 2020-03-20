@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Network structure
-nav_order: 2
+nav_order: 3
 ---
 
 # Network structure
@@ -15,60 +15,19 @@ nav_order: 2
 
 ---
 
-The **Network** consists of several **Nodes** which are wrappers for **Peers**. These nodes are connected via peer to peer connections.
-
-The **Peers** are objects from the library [peerjs](peerjs.com).
+The **Network** consists of several **Nodes**. These nodes are connected via peer to peer connections, which use the library [peerjs](peerjs.com).
 
 ## Nodes and their layers
 
-The implementation tries to adhere to the OSI network model, but only uses the layers that are strictly necessary. These layers are the presentation, session, transport and network layer.
-
-<table class="tg">
-    <thead>
-        <tr>
-            <th class="tg-0lax">OSI model</th>
-            <th class="tg-0lax">p2p-mesh-network</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td class="tg-0lax">Application</td>
-            <td class="tg-0lax">Application that uses p2p-mesh-network</td>
-        </tr>
-        <tr>
-            <td class="tg-0lax">Presentation</td>
-            <td class="tg-0lax" rowspan="4">p2p-mesh-network</td>
-        </tr>
-        <tr>
-            <td class="tg-0lax">Session</td>
-        </tr>
-        <tr>
-            <td class="tg-0lax">Transport</td>
-        </tr>
-        <tr>
-            <td class="tg-0lax">Network</td>
-        </tr>
-        <tr>
-            <td class="tg-0lax">Data link</td>
-            <td class="tg-0lax" rowspan="2">PeerJS</td>
-        </tr>
-        <tr>
-            <td class="tg-0lax">Physical</td>
-        </tr>
-    </tbody>
-</table>
-
-### Presentation & session layer
-
-These two layers serve more as an interface for the application using p2p-mesh-network as there is no real functionality present yet.
+The implementation uses different layers, just like the real internet: transport and network.
 
 ### Transport layer
 
-This layer delivers reliable data transmission over different nodes. It uses a simplified TCP with a simplified *Selective Repeat* protocol to this end. Every node has one send and receive buffer per node with which it is communicating.
+This layer delivers reliable data transmission over different nodes. It uses a simplified *Selective Repeat* protocol to this end. Every node has one send and one receive buffer per other node with which it is communicating.
 
 ### Network layer
 
-Instead of using ip addresses, a node generates an address in the form of a universally unique identifier, version 4. This address is used to identify and communicate with other nodes on the network.
+Instead of using ip addresses, a node generates an address in the form of a [Universally Unique Identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier), version 4. This address is used to identify and communicate with other nodes on the network.
 
 Access control of new nodes to the network is handled in this layer.
 
@@ -76,35 +35,22 @@ Messages are routed over the network via a link-state routing protocol.
 
 ## Deeper look
 
-### Messaging
-
-There are two ways to send messages on the network: unicast and broadcast. These work in the same way as in tcp/ip.
-
-Apart from these two types of communication, housekeeping is done behind the scenes to keep the stability of the network. These message types exist to achieve this goal. Their specific use will be explained in detail later.
-
-<dl>
-    <dt>acknowledgement</dt>
-    <dd>Used to deliver reliable message delivery.</dd>
-    <dt>connectionAccepted</dt>
-    <dd>Sent to a node that is trying to connect to the network. Means that the node can accept the connection as final.</dd>
-    <dt>connectionRejected</dt>
-    <dd>Sent to a node that is trying to connect to the network. Means that the node should disconnect the current connection and should connect to the address contained in this message.</dd>
-    <dt>entryPointRequest</dt>
-    <dd>Emitted byt a node that gets an incoming connection request if there are no connection slots available anymore.</dd>
-    <dt>entryPoint</dt>
-    <dd>Sent on receival of <i>entryPointRequest</i> by a node that has available connection slots.</dd>
-    <dt>networkState</dt>
-    <dd>Sent by any node of which the connection state to any neighbouring node has changed. Used by the link-state routing protocol.</dd>
-    <dt>networkStateRequest</dt>
-    <dd>Sent by any node that beleives its network model is out of date.</dd>
-</dl>
-
 ### Connecting to the network
 
-Because of the way *PeerJS* works, a node that wishes to make a new connection to another node has to consider the inital connection temporary. The node on the receiving end may, as it wishes, deny the connection if it does not have enough connection slots available. Nevertheless, the receiving node has to deliver a valid address from a node on the same network to which the initiating node **can** connect.
+To connect to a network, the address of one of the nodes has to be known. When connecting to that network, a connection request is sent to the node which belongs to the address. This node can, depending on the amount of current connections, decide to accept or deny the conection.
 
-A valid address is found by requesting it on the network using an *entryPointRequest*. This message is flooded on the network and any node with available connection slots should answer with an *entryPoint* message containing its address.
+When the node accepts the incoming connection, the change in network topology is communicated to the rest of the network.
+
+When the node rejects the incoming connection, it is responsible for finding another access point in the network. To do this, the node broadcasts an entry point request. Any other node on the network that is able to accept new connections can send its address back. This address is then sent to the connecting node so that it can connect to the network.
 
 ### Link-state routing protocol
 
-The network uses a simple implementation of the link-state routing protocol. It uses the *networkState* and *networkSateRequest* messages to distribute network topography.
+The network uses a simple implementation of the link-state routing protocol. Every node has its own representation of the network. On every broadcasted network topology change, this representation is updated and a routing table is generated.
+
+### Messaging
+
+There are three ways to send messages on the network: unicast, multicast and broadcast. Messages are tracked using send and receive buffers. These buffers are implemented using a *slective repeat* type protocol. This way reliable delivery is provided. Messages are not encrypted.
+
+### Balancing
+
+A node will always try to keep the network balanced and well connected. A node will thus keep the amount of connections between a given minimum and maximum, as long as there are enough nodes on the network. For every new connection it will try to find the farthest node on the network, based on its internal routing table.

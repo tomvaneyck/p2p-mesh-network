@@ -128,6 +128,11 @@ class Node implements MeshNetwork {
         this.networkEntitity.connectToPeer(address);
     }
 
+    // See:
+    //   https://stackoverflow.com/questions/51202569/typescript-allow-for-optional-arguments-overloading-methods
+    // and
+    //   https://www.typescriptlang.org/docs/handbook/functions.html
+    //   end of page
     public sendData(data: any): void;
     public sendData(data: any, destinationAddress: string): void;
     public sendData(data: any, destinationAddress?: string): void {
