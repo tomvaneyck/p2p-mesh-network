@@ -7,12 +7,15 @@ nav_order: 1
 # p2p-mesh-network
 
 Make a peer to peer mesh network over WebRTC and send any type of data from browser to browser.
-
 Perfect for ditributed applications where nodes can appear or disappear without warning.
+
+A demo application can be found [here](https://tomvaneyck.be).
 
 ## Quick start
 
-Import this library in your project, make a new node and connect to others to establish a network. Then just send any data you like.
+Import this library in your project, make a new node and connect to others to establish a network. Then just send any data you like. The public interface is explained [here](API).
+
+[Find the npm package here.](https://www.npmjs.com/package/p2p-mesh-network)
 
 ``` typescript
 import { Node } from "p2p-mesh-network";
@@ -24,6 +27,10 @@ node.sendData("someData")
 
 ## How does it work?
 
-The network exists of different nodes, connected via a peer to peer connection using [PeerJS](https://peerjs.com/). When you want to connect a new node to the network, a request is done to a public server with the id of an existing node on the network. The server then returns with the ip address which the new node can use to connect to the network.
+The network exists of different nodes, connected via a peer to peer connection using [PeerJS](https://peerjs.com/). The network is self balancing and highly connected.
+
+The network starts out with one node with an address. To join this network, a new node has to know this address. A connection is then made, using a _PeerJS_ server as tracking service.
+
+Communication is based on a simplified protocol that uses link state routing to route a message and acknowledgements to deliver reliable transmission.
 
 More detailed information can be found [here](network-structure.md)
