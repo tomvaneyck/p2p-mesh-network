@@ -37,7 +37,7 @@ Messages are routed over the network via a link-state routing protocol.
 
 ### Connecting to the network
 
-To connect to a network, the address of one of the nodes has to be known. When connecting to that network, a connection request is sent to the node which belongs to the address. This node can, depending on the amount of current connections, decide to accept or deny the conection.
+To connect to a network, the address of one of the nodes has to be known. When connecting to that network, a connection request is sent to the node which belongs to the address. This node can, depending on the amount of current connections, decide to accept or deny the connection.
 
 When the node accepts the incoming connection, the change in network topology is communicated to the rest of the network.
 
@@ -49,7 +49,7 @@ The network uses a simple implementation of the link-state routing protocol. Eve
 
 ### Messaging
 
-There are three ways to send messages on the network: unicast, multicast and broadcast. Messages are tracked using send and receive buffers. These buffers are implemented using a *slective repeat* type protocol. This way reliable delivery is provided. Messages are not encrypted.
+There are three ways to send messages on the network: unicast, multicast and broadcast. Messages are tracked using send and receive buffers. These buffers are implemented using a *selective repeat* type protocol. This way reliable delivery is provided. Messages are not encrypted.
 
 ### Balancing
 
