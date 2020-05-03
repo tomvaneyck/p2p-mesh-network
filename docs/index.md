@@ -13,7 +13,7 @@ A demo application can be found [here](https://tomvaneyck.be). This application 
 
 ## Quick start
 
-Import this library in your project, make a new node and connect to others to establish a network. Then just send any data you like. The public interface is explained [here](API).
+Import this library in your project, make a new node and connect to others to establish a network. Then just send any data you like. The public interface is explained [here](api.md).
 
 [Find the npm package here.](https://www.npmjs.com/package/p2p-mesh-network)
 
